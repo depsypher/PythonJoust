@@ -15,19 +15,6 @@ def load_sliced_sprites(w, h, filename):
           images.append(master_image.subsurface((i*w,0,w,h)))
      return images
 
-
-def loadBirds():
-     birdimages = load_sliced_sprites(60,60,"playerMounted.png")
-     return birdimages
-
-def loadEnemies():
-     enemyimages = load_sliced_sprites(60,58,"enemies2.png")
-     return enemyimages
-
-def loadSpawns():
-    spawnimages = load_sliced_sprites(60,60,"spawn1.png")
-    return spawnimages
-
 def loadPlatforms():
      platformimages = []
      platformimages.append(pygame.image.load("plat1.png"))
@@ -53,10 +40,11 @@ class platformClass(pygame.sprite.Sprite):
 
 
 class enemyClass(pygame.sprite.Sprite):
-     def __init__(self,enemyimages, spawnimages, startPos,enemyType):
+     def __init__(self,enemyimages, spawnimages, unmountedimages, startPos,enemyType):
           pygame.sprite.Sprite.__init__(self) #call Sprite initializer
           self.images = enemyimages
           self.spawnimages=spawnimages
+          self.unmountedimages = unmountedimages
           self.frameNum = 0
           self.enemyType = enemyType
           self.image = self.spawnimages[0]
@@ -73,80 +61,93 @@ class enemyClass(pygame.sprite.Sprite):
           self.walking = True
           self.flapCount = 0
           self.spawning=True
+          self.alive=True
          
-
+     def killed(self):
+          self.alive = False
+          
      def update(self, current_time,keys,platforms,god):
           if self.next_update_time<current_time:  # only update every 30 millis
                     self.next_update_time = current_time+50
                     if self.spawning:
-                           self.frameNum +=1
-                           self.image = self.spawnimages[self.frameNum]
-                           self.next_update_time += 100
-                           self.rect.topleft = (self.x,self.y)
-                           if self.frameNum==5:
-                               self.spawning=False
+                         self.frameNum +=1
+                         self.image = self.spawnimages[self.frameNum]
+                         self.next_update_time += 100
+                         self.rect.topleft = (self.x,self.y)
+                         if self.frameNum==5:
+                              self.spawning=False
                     else:
-                            #see if we need to accelerate
-                            if abs(self.xspeed) < self.targetXSpeed:
-                                    self.xspeed += self.xspeed/abs(self.xspeed)/2
-                            #work out if flapping...
-                            if random.randint(0,10)>8 and (not keys[pygame.K_1] or not god.on):
-                                    if self.flap < 1:
-                                            if self.yspeed > -250:
-                                                    self.yspeed -=3
-                                            self.flap = 3
-                            else:
-                                    self.flap -=1
+                         #see if we need to accelerate
+                         if abs(self.xspeed) < self.targetXSpeed:
+                              self.xspeed += self.xspeed/abs(self.xspeed)/2
+                         #work out if flapping...
+                         if random.randint(0,10)>8 and (not keys[pygame.K_1] or not god.on):
+                              if self.flap < 1:
+                                   if self.yspeed > -250:
+                                        self.yspeed -=3
+                                        self.flap = 3
+                         else:
+                              self.flap -=1
 
-                            self.x = self.x + self.xspeed
-                            self.y = self.y + self.yspeed
-                            if not self.walking:
-                                    self.yspeed += 0.4
-                            if self.yspeed > 10:        #this is all handling the
-                                    self.yspeed = 10        #screen edges, looping between screens
-                            if self.yspeed < -10:       #etc...
-                                    self.yspeed = -10
-                            if self.y < 0:
-                                 self.y=0
-                                 self.yspeed = 2
-                            if self.y > 550:
-                                    self.y = 550
-                                    self.yspeed=0
-                            if self.x < -48:
-                                    self.x = 900
-                            if self.x >900:
-                                    self.x = -48
-                            self.rect.topleft = (self.x,self.y)
-                            #check for platform collision
-                            collidedPlatforms = pygame.sprite.spritecollide(self,platforms,False,collided=pygame.sprite.collide_mask)
-                            self.walking = False
-                            if (((self.y >40 and self.y < 45) or (self.y >220 and self.y < 225)) and (self.x < 0 or self.x > 860)):  #catch when it is walking between screens
-                                    self.walking = True
-                                    self.yspeed = 0
-                            else:
-                                    for collidedPlatform in collidedPlatforms:
-                                         self.bounce(collidedPlatform)
-                            self.rect.topleft = (self.x,self.y)
-                            if self.walking:
-                                    if self.next_anim_time < current_time:
-                                            if self.xspeed != 0:
-                                                    self.next_anim_time = current_time + 100/abs(self.xspeed)
-                                                    self.frameNum +=1
-                                                    if self.frameNum > 3:
-                                                            self.frameNum = 0
-                                            else:
-                                                    self.frameNum = 3
-                            else:
-                                    if self.flap>0:
-                                            self.frameNum = 6
-                                    else:
-                                            self.frameNum = 5                                           
-                            self.image = self.images[((self.enemyType*7)+self.frameNum)]
-                            if self.xspeed <0 or (self.xspeed == 0 and self.facingRight == False):
-                                    self.image = pygame.transform.flip(self.image, True, False)
-                                    self.facingRight = False
-                            else:
-                                    self.facingRight = True
+                         self.x = self.x + self.xspeed
+                         self.y = self.y + self.yspeed
+                         if not self.walking:
+                                   self.yspeed += 0.4
+                         if self.yspeed > 10:        
+                                   self.yspeed = 10  
+                         if self.yspeed < -10:       
+                                   self.yspeed = -10
+                         if self.y < 0: # can't go off the top
+                              self.y=0
+                              self.yspeed = 2
+                         if self.y > 550: #can't go off the bottom # Lava to be added
+                              self.y = 550
+                              self.yspeed=0
+                         if self.x < -48:    #off the left. If enemy is dead then remove entirely
+                              if self.alive:
+                                   self.x = 900
+                              else:
+                                   self.kill()
+                         if self.x >900:     #off the right. If enemy is dead then remove entirely
+                              if self.alive:
+                                   self.x = -48
+                              else:
+                                   self.kill()
+                         self.rect.topleft = (self.x,self.y)
+                         #check for platform collision
+                         collidedPlatforms = pygame.sprite.spritecollide(self,platforms,False,collided=pygame.sprite.collide_mask)
+                         self.walking = False
+                         if (((self.y >40 and self.y < 45) or (self.y >220 and self.y < 225)) and (self.x < 0 or self.x > 860)):  #catch when it is walking between screens
+                              self.walking = True
+                              self.yspeed = 0
+                         else:
+                              for collidedPlatform in collidedPlatforms:
+                                   self.bounce(collidedPlatform)
+                         self.rect.topleft = (self.x,self.y)
+                         if self.walking:
+                              if self.next_anim_time < current_time:
+                                   if self.xspeed != 0:
+                                             self.next_anim_time = current_time + 100/abs(self.xspeed)
+                                             self.frameNum +=1
+                                             if self.frameNum > 3:
+                                                  self.frameNum = 0
+                                             else:
+                                                  self.frameNum = 3
+                         else:
+                              if self.flap>0:
+                                   self.frameNum = 6
+                              else:
+                                   self.frameNum = 5
+                         if self.alive:
+                              self.image = self.images[((self.enemyType*7)+self.frameNum)]
+                         else:
+                              #show the unmounted sprite
+                              self.image = self.unmountedimages[self.frameNum]
+                         if self.xspeed <0 or (self.xspeed == 0 and self.facingRight == False):
+                              self.image = pygame.transform.flip(self.image, True, False)
+                              self.facingRight = False
+                         else:
+                              self.facingRight = True
 
 
      def bounce(self,collidedThing):
@@ -177,13 +178,13 @@ class playerClass(pygame.sprite.Sprite):
      def __init__(self,birdimages,spawnimages):
           pygame.sprite.Sprite.__init__(self) #call Sprite initializer
           self.images = birdimages
-          self.frameNum = 0
+          self.frameNum = 2
           self.image = self.images[self.frameNum]
           self.rect = self.image.get_rect()
           self.next_update_time = 0
           self.next_anim_time = 0
-          self.x = 300
-          self.y = 440
+          self.x = 415
+          self.y = 350
           self.facingRight = True
           self.xspeed = 0
           self.yspeed = 0
@@ -238,13 +239,14 @@ class playerClass(pygame.sprite.Sprite):
                collidedBirds = pygame.sprite.spritecollide(self,enemies,False,collided=pygame.sprite.collide_mask)
                for bird in collidedBirds:
                     #check each bird to see if above or below
-                    if bird.y > self.y:
+                    if bird.y > self.y and bird.alive:
                          self.bounce(bird)
-                         bird.kill()
-     
-                    elif bird.y < self.y-5 and not god.on:
+                         bird.killed()
+                         bird.bounce(self)
+                    elif bird.y < self.y-5 and bird.alive and not god.on:
                          self.kill()
-                    else:
+                         
+                    elif bird.alive:
                          self.bounce(bird)
                          bird.bounce(self)
                #check for platform collision
@@ -332,9 +334,10 @@ class godmode(pygame.sprite.Sprite):
                self.timer = current_time+1000
           
           
-def generateEnemies(enemyimages, spawnimages, enemyList,spawnPoints, enemiesToSpawn):
+def generateEnemies(enemyimages, spawnimages, unmountedimages, enemyList,spawnPoints, enemiesToSpawn):
+     #makes 2 enemies at a time, at 2 random spawn points
      for count in range(2):
-          enemyList.add(enemyClass(enemyimages, spawnimages, spawnPoints[count],0))
+          enemyList.add(enemyClass(enemyimages, spawnimages, unmountedimages, spawnPoints[random.randint(0,3)],0)) #last 0 is enemytype
           enemiesToSpawn -=1
           
      return enemyList, enemiesToSpawn
@@ -348,14 +351,15 @@ def main():
      enemyList =  pygame.sprite.RenderUpdates()
      platforms =  pygame.sprite.RenderUpdates()
      godSprite = pygame.sprite.RenderUpdates()
-     birdimages = loadBirds()
-     enemyimages = loadEnemies()
-     spawnimages = loadSpawns()
+     birdimages = load_sliced_sprites(60,60,"playerMounted.png")
+     enemyimages = load_sliced_sprites(60,58,"enemies2.png")
+     spawnimages = load_sliced_sprites(60,60,"spawn1.png")
+     unmountedimages = load_sliced_sprites(60,60,"unmounted.png")
      platformImages = loadPlatforms()
      playerbird = playerClass(birdimages,spawnimages)
      god = godmode()
      godSprite.add(godmode())
-     spawnPoints = [[420,80],[50,255]]
+     spawnPoints = [[690,248],[420,500], [420,80],[50,255]]
      plat1 = platformClass(platformImages[0],200,550)  #we create each platform by sending it the relevant platform image, the x position of the platform and the y position
      plat2 = platformClass(platformImages[1],350,395)
      plat3 = platformClass(platformImages[2],350,130)
@@ -368,18 +372,20 @@ def main():
      platforms.add(plat1,plat2,plat3,plat4,plat5,plat6,plat7,plat8)
      pygame.display.update()
      nextSpawnTime = pygame.time.get_ticks() + 2000
-     enemiesToSpawn = 6
+     enemiesToSpawn = 6 # test. make 6 enemies to start
      running = True
      while running:
           current_time = pygame.time.get_ticks()
+          #make enemies
           if current_time>nextSpawnTime and enemiesToSpawn>0:
-                   enemyList, enemiesToSpawn = generateEnemies(enemyimages,spawnimages, enemyList,spawnPoints,enemiesToSpawn)
-                   nextSpawnTime = current_time+5000
+               enemyList, enemiesToSpawn = generateEnemies(enemyimages,spawnimages, unmountedimages, enemyList,spawnPoints,enemiesToSpawn)
+               nextSpawnTime = current_time+5000
           keys = pygame.key.get_pressed()
           pygame.event.clear()
           #If they have pressed Escape, close down Pygame
           if keys[pygame.K_ESCAPE]:
                running=False
+          #check for God mode toggle
           if keys[pygame.K_g]:
                god.toggle(current_time)
           player.update(current_time,keys,platforms,enemyList,god)
