@@ -51,7 +51,6 @@ class eggClass(pygame.sprite.Sprite):
           self.x += self.xspeed
           if self.y > 570: #hit lava
                self.kill()          
-
      
      def update(self, current_time,platforms):
           # Update every 30 milliseconds
@@ -378,78 +377,6 @@ class playerClass(pygame.sprite.Sprite):
                               if self.flap:
                                    self.image = self.images[6]
                
-
-               if keys[pygame.K_LEFT]:
-                    if self.xspeed >-10:
-                         self.xspeed -=0.5
-               elif keys[pygame.K_RIGHT]:
-                    if self.xspeed <10:
-                         self.xspeed +=0.5
-               if keys[pygame.K_SPACE]:
-                    if self.flap == False:
-                         self.playerChannel.stop()
-                         self.flapsound.play(0)
-                         if self.yspeed > -250:
-                              self.yspeed -=3
-                         self.flap = True
-               else:
-                    self.flap = False
-               self.x = self.x + self.xspeed
-               self.y = self.y + self.yspeed
-               if not self.walking:
-                    self.yspeed += 0.4
-               if self.yspeed > 10:
-                    self.yspeed = 10
-               if self.yspeed < -10:
-                    self.yspeed = -10
-               if self.y < 0:
-                    self.y = 0
-                    self.yspeed=2
-               if self.y > 550:
-                    self.y = 550
-                    self.yspeed=0
-               if self.x < -48:
-                    self.x = 900
-               if self.x >900:
-                    self.x = -48
-               self.rect.topleft = (self.x,self.y)
-               #check for enemy collision
-               collidedBirds = pygame.sprite.spritecollide(self,enemies,False,collided=pygame.sprite.collide_mask)
-               for bird in collidedBirds:
-                    #check each bird to see if above or below
-                    if bird.y > self.y and bird.alive:
-                         self.bounce(bird)
-                         bird.killed(eggList, eggimages)
-                         bird.bounce(self)
-                    elif bird.y < self.y-5 and bird.alive and not god.on:
-                         self.kill()
-                         
-                    elif bird.alive:
-                         self.bounce(bird)
-                         bird.bounce(self)
-               #check for platform collision
-               collidedPlatforms = pygame.sprite.spritecollide(self,platforms,False,collided=pygame.sprite.collide_mask)
-               self.walking = False
-               if (((self.y >40 and self.y < 45) or (self.y >250 and self.y < 255)) and (self.x < 0 or self.x > 860)):  #catch when it is walking between screens
-                    self.walking = True
-                    self.yspeed = 0
-               else:
-                    collided=False
-                    for collidedPlatform in collidedPlatforms:   
-                         collided = self.bounce(collidedPlatform)
-                    if collided:
-                         #play a bump sound
-                         self.playerChannel.play(self.bumpsound)
-               self.rect.topleft = (self.x,self.y)
-               if self.walking:
-                    #if walking
-                    if self.next_anim_time < current_time:
-                         if self.xspeed != 0:
-                              if (self.xspeed>5 and keys[pygame.K_LEFT]) or (self.xspeed<-5 and keys[pygame.K_RIGHT]):
-
-                                   if  self.frameNum != 4:
-                                        self.playerChannel.play(self.skidsound)
-                                   self.frameNum=4
                               else:
                                    self.image = self.images[5]
                          if self.xspeed <0 or (self.xspeed == 0 and self.facingRight == False):
@@ -642,7 +569,6 @@ def main():
      lifeimage = pygame.image.load("life.png")
      lifeimage = lifeimage.convert_alpha()
      digits = load_sliced_sprites(21,21,"digits.png")
-     eggimages = load_sliced_sprites(40,33,"egg.png")
      platformImages = loadPlatforms()
      playerbird = playerClass(birdimages,spawnimages, playerUnmountedimages)
      god = godmode()
@@ -700,12 +626,9 @@ def main():
           pygame.display.update(enemiesRects)
           pygame.display.update(eggRects)
           pygame.display.update(godrect)
-          pygame.display.update()
           player.clear(screen,clearSurface)
           enemyList.clear(screen,clearSurface)
           eggList.clear(screen,clearSurface)
           godSprite.clear(screen,clearSurface)
-
-
 main()
 pygame.quit()
