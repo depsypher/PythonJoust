@@ -49,12 +49,9 @@ class eggClass(pygame.sprite.Sprite):
                self.yspeed = 10
           self.y += self.yspeed
           self.x += self.xspeed
-<<<<<<< HEAD
           if self.y > 570: #hit lava
                self.kill()          
-=======
-          print(self.x, self.y)
->>>>>>> origin/master
+
      
      def update(self, current_time,platforms):
           # Update every 30 milliseconds
@@ -284,7 +281,6 @@ class playerClass(pygame.sprite.Sprite):
 
           if self.next_update_time < current_time:
                self.next_update_time = current_time + 30
-<<<<<<< HEAD
                if self.alive ==2:
                     if self.spawning:
                          self.frameNum +=1
@@ -382,7 +378,7 @@ class playerClass(pygame.sprite.Sprite):
                               if self.flap:
                                    self.image = self.images[6]
                
-=======
+
                if keys[pygame.K_LEFT]:
                     if self.xspeed >-10:
                          self.xspeed -=0.5
@@ -454,7 +450,6 @@ class playerClass(pygame.sprite.Sprite):
                                    if  self.frameNum != 4:
                                         self.playerChannel.play(self.skidsound)
                                    self.frameNum=4
->>>>>>> origin/master
                               else:
                                    self.image = self.images[5]
                          if self.xspeed <0 or (self.xspeed == 0 and self.facingRight == False):
@@ -642,15 +637,12 @@ def main():
      enemyimages = load_sliced_sprites(60,58,"enemies2.png")
      spawnimages = load_sliced_sprites(60,60,"spawn1.png")
      unmountedimages = load_sliced_sprites(60,60,"unmounted.png")
-<<<<<<< HEAD
      playerUnmountedimages = load_sliced_sprites(60,60,"playerUnmounted.png")
      eggimages = load_sliced_sprites(40,33,"egg.png")
      lifeimage = pygame.image.load("life.png")
      lifeimage = lifeimage.convert_alpha()
      digits = load_sliced_sprites(21,21,"digits.png")
-=======
      eggimages = load_sliced_sprites(40,33,"egg.png")
->>>>>>> origin/master
      platformImages = loadPlatforms()
      playerbird = playerClass(birdimages,spawnimages, playerUnmountedimages)
      god = godmode()
@@ -696,10 +688,7 @@ def main():
                godrect = pygame.Rect(850,0,50,50)
           playerRect = player.draw(screen)
           eggRects = eggList.draw(screen)
-<<<<<<< HEAD
           lavaRect = drawLava(screen)
-=======
->>>>>>> origin/master
           platRects = platforms.draw(screen)
           lavarect2 = drawLava2(screen)
           drawLives(playerbird.lives,screen,lifeimage)
@@ -716,12 +705,7 @@ def main():
           enemyList.clear(screen,clearSurface)
           eggList.clear(screen,clearSurface)
           godSprite.clear(screen,clearSurface)
-<<<<<<< HEAD
-=======
 
 
-
-
->>>>>>> origin/master
 main()
 pygame.quit()
