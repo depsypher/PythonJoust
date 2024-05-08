@@ -1,13 +1,14 @@
 # Joust by S Paget
 
+import asyncio
 import pygame
 import random
 
 from enemy import Enemy
 from player import Player
 
-pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.init()
+pygame.mixer.pre_init(44100, -16, 2, 512)
 
 
 def load_sliced_sprites(w, h, filename):
@@ -92,73 +93,86 @@ def draw_score(score, screen, digits):
     screen.blit(digits[(score % 1000000) // 100000], [263, 570])
 
 
-def main():
-    window = pygame.display.set_mode((900, 650))
-    pygame.display.set_caption('Joust')
-    screen = pygame.display.get_surface()
-    clear_surface = screen.copy()
+running = True
+window = pygame.display.set_mode((900, 650))
+pygame.display.set_caption('Joust')
+screen = pygame.display.get_surface()
+clear_surface = screen.copy()
 
-    player = pygame.sprite.RenderUpdates()
-    enemies = pygame.sprite.RenderUpdates()
-    eggs = pygame.sprite.RenderUpdates()
-    platforms = pygame.sprite.RenderUpdates()
-    god_sprite = pygame.sprite.RenderUpdates()
+player = pygame.sprite.RenderUpdates()
+enemies = pygame.sprite.RenderUpdates()
+eggs = pygame.sprite.RenderUpdates()
+platforms = pygame.sprite.RenderUpdates()
+god_sprite = pygame.sprite.RenderUpdates()
 
-    lifeimage = pygame.image.load("resources/graphics/life.png").convert_alpha()
+lifeimage = pygame.image.load("resources/graphics/life.png").convert_alpha()
 
-    images = {
-        "enemy":    load_sliced_sprites(60, 58, "resources/graphics/enemies2.png"),
-        "spawn":    load_sliced_sprites(60, 60, "resources/graphics/spawn1.png"),
-        "unmounted": load_sliced_sprites(60, 60, "resources/graphics/unmounted.png"),
-        "egg":      load_sliced_sprites(40, 33, "resources/graphics/egg.png"),
-        "digits":   load_sliced_sprites(21, 21, "resources/graphics/digits.png"),
-        "bird":     load_sliced_sprites(60, 60, "resources/graphics/playerMounted.png"),
-        "player_unmounted": load_sliced_sprites(60, 60, "resources/graphics/playerUnmounted.png"),
-    }
+images = {
+    "enemy":    load_sliced_sprites(60, 58, "resources/graphics/enemies2.png"),
+    "spawn":    load_sliced_sprites(60, 60, "resources/graphics/spawn1.png"),
+    "unmounted": load_sliced_sprites(60, 60, "resources/graphics/unmounted.png"),
+    "egg":      load_sliced_sprites(40, 33, "resources/graphics/egg.png"),
+    "digits":   load_sliced_sprites(21, 21, "resources/graphics/digits.png"),
+    "bird":     load_sliced_sprites(60, 60, "resources/graphics/playerMounted.png"),
+    "player_unmounted": load_sliced_sprites(60, 60, "resources/graphics/playerUnMounted.png"),
+}
 
-    player_bird = Player(images)
+player_bird = Player(images)
 
-    god = Godmode()
-    god_sprite.add(Godmode())
-    spawn_points = [[690, 248], [420, 500], [420, 80], [50, 255]]
+god = Godmode()
+god_sprite.add(Godmode())
+spawn_points = [[690, 248], [420, 500], [420, 80], [50, 255]]
 
-    platform_images = [
-        pygame.image.load("resources/graphics/plat1.png"),
-        pygame.image.load("resources/graphics/plat2.png"),
-        pygame.image.load("resources/graphics/plat3.png"),
-        pygame.image.load("resources/graphics/plat4.png"),
-        pygame.image.load("resources/graphics/plat5.png"),
-        pygame.image.load("resources/graphics/plat6.png"),
-        pygame.image.load("resources/graphics/plat7.png"),
-        pygame.image.load("resources/graphics/plat8.png")
-    ]
+platform_images = [
+    pygame.image.load("resources/graphics/plat1.png"),
+    pygame.image.load("resources/graphics/plat2.png"),
+    pygame.image.load("resources/graphics/plat3.png"),
+    pygame.image.load("resources/graphics/plat4.png"),
+    pygame.image.load("resources/graphics/plat5.png"),
+    pygame.image.load("resources/graphics/plat6.png"),
+    pygame.image.load("resources/graphics/plat7.png"),
+    pygame.image.load("resources/graphics/plat8.png")
+]
 
-    # we create each platform by sending it the relevant platform image,
-    # the x position of the platform and the y position
-    plat1 = Platform(platform_images[0], 200,550)
-    plat2 = Platform(platform_images[1], 350, 395)
-    plat3 = Platform(platform_images[2], 350, 130)
-    plat4 = Platform(platform_images[3], 0, 100)
-    plat5 = Platform(platform_images[4], 759, 100)
-    plat6 = Platform(platform_images[5], 0, 310)
-    plat7 = Platform(platform_images[6], 759, 310)
-    plat8 = Platform(platform_images[7], 600, 290)
+# we create each platform by sending it the relevant platform image,
+# the x position of the platform and the y position
+plat1 = Platform(platform_images[0], 200,550)
+plat2 = Platform(platform_images[1], 350, 395)
+plat3 = Platform(platform_images[2], 350, 130)
+plat4 = Platform(platform_images[3], 0, 100)
+plat5 = Platform(platform_images[4], 759, 100)
+plat6 = Platform(platform_images[5], 0, 310)
+plat7 = Platform(platform_images[6], 759, 310)
+plat8 = Platform(platform_images[7], 600, 290)
 
-    player.add(player_bird)
-    platforms.add(plat1, plat2, plat3, plat4, plat5, plat6, plat7, plat8)
-    pygame.display.update()
-    next_spawn_time = pygame.time.get_ticks() + 2000
-    enemies_to_spawn = 6  # test. make 6 enemies to start
-    score = Score()
-    running = True
+player.add(player_bird)
+platforms.add(plat1, plat2, plat3, plat4, plat5, plat6, plat7, plat8)
+pygame.display.update()
+next_spawn_time = pygame.time.get_ticks() + 2000
+enemies_to_spawn = 6  # test. make 6 enemies to start
+score = Score()
+
+
+async def main():
+    global running, next_spawn_time, enemies_to_spawn, enemies
 
     while running:
         current_time = pygame.time.get_ticks()
+        player.clear(screen, clear_surface)
+        enemies.clear(screen, clear_surface)
+        eggs.clear(screen, clear_surface)
+        god_sprite.clear(screen, clear_surface)
 
         # make enemies
         if current_time > next_spawn_time and enemies_to_spawn > 0:
             enemies, enemies_to_spawn = generate_enemies(images, enemies, spawn_points, enemies_to_spawn)
             next_spawn_time = current_time + 5000
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                # sys.exit()
+                return
 
         keys = pygame.key.get_pressed()
         pygame.event.clear()
@@ -186,21 +200,17 @@ def main():
         draw_lives(player_bird.lives, screen, lifeimage)
         draw_score(score.score, screen, images["digits"])
 
+        godrect = god_sprite.draw(screen) if god.on else pygame.Rect(850, 0, 50, 50)
+
         pygame.display.update(playerRect)
         pygame.display.update(lavaRect)
         pygame.display.update(lavarect2)
         pygame.display.update(platRects)
         pygame.display.update(enemiesRects)
         pygame.display.update(eggRects)
-
-        godrect = god_sprite.draw(screen) if god.on else pygame.Rect(850, 0, 50, 50)
         pygame.display.update(godrect)
-
-        player.clear(screen, clear_surface)
-        enemies.clear(screen, clear_surface)
-        eggs.clear(screen, clear_surface)
-        god_sprite.clear(screen, clear_surface)
+#        pygame.display.update()
+        await asyncio.sleep(0)
 
 
-main()
-pygame.quit()
+asyncio.run(main())

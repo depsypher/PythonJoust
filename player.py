@@ -24,10 +24,10 @@ class Player(pygame.sprite.Sprite):
         self.flap = False
         self.walking = True
         self.playerChannel = pygame.mixer.Channel(0)
-        self.flap_sound = pygame.mixer.Sound("resources/sound/joustflaedit.wav")
-        self.skid_sound = pygame.mixer.Sound("resources/sound/joustski.wav")
-        self.bump_sound = pygame.mixer.Sound("resources/sound/joustthu.wav")
-        self.egg_sound = pygame.mixer.Sound("resources/sound/joustegg.wav")
+        self.flap_sound = pygame.mixer.Sound("resources/sound/joustflaedit.ogg")
+        self.skid_sound = pygame.mixer.Sound("resources/sound/joustski.ogg")
+        self.bump_sound = pygame.mixer.Sound("resources/sound/joustthu.ogg")
+        self.egg_sound = pygame.mixer.Sound("resources/sound/joustegg.ogg")
         self.lives = 4
         self.spawning = True
         self.alive = 2
