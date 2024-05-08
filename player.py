@@ -32,6 +32,7 @@ class Player(pygame.sprite.Sprite):
         self.spawning = True
         self.alive = 2
 
+
     def update(self, current_time, keys, platforms, enemies, god, eggs, score):
         # Update every 30 milliseconds
 

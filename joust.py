@@ -54,9 +54,11 @@ class Godmode(pygame.sprite.Sprite):
 
 
 def generate_enemies(images, enemies, spawn_points, enemies_to_spawn):
-    # makes 2 enemies at a time, at 2 random spawn points
+    # makes 2 enemies at a time, at 2 random different spawn points
+    chosen = spawn_points.copy()
+    random.shuffle(chosen)
     for count in range(2):
-        enemies.add(Enemy(images, spawn_points[random.randint(0, 3)], 0))
+        enemies.add(Enemy(images, chosen[count], 0))
         enemies_to_spawn -= 1
 
     return enemies, enemies_to_spawn
@@ -174,11 +176,6 @@ def main():
         enemies.update(current_time, keys, platforms, god)
         eggs.update(current_time, platforms)
 
-        if god.on:
-            godrect = god_sprite.draw(screen)
-        else:
-            godrect = pygame.Rect(850, 0, 50, 50)
-
         enemiesRects = enemies.draw(screen)
         playerRect = player.draw(screen)
         eggRects = eggs.draw(screen)
@@ -195,6 +192,8 @@ def main():
         pygame.display.update(platRects)
         pygame.display.update(enemiesRects)
         pygame.display.update(eggRects)
+
+        godrect = god_sprite.draw(screen) if god.on else pygame.Rect(850, 0, 50, 50)
         pygame.display.update(godrect)
 
         player.clear(screen, clear_surface)
