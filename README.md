@@ -1,6 +1,12 @@
 PythonJoust
 ===========
 
+## Fork Info:
+I found @StevePaget made a very nice starting point for a joust game! So far I haven't added much, perhaps more to come, but I did make it playable online using pygbag for wasm conversion:
+
+https://depsypher.github.io/PythonJoust/
+
+## Original Readme:
 A version of Joust, the old arcade game. I'm just making this for fun, and to brush up my Pygame skills.
 
 Requirements:
