@@ -2,10 +2,13 @@ import random
 
 import pygame
 
+from enemy import Enemy
+from actors import Character
 
-class Player(pygame.sprite.Sprite):
+
+class Player(Character):
     def __init__(self, images):
-        pygame.sprite.Sprite.__init__(self)  # call Sprite initializer
+        super().__init__()
         self.images = images["bird"]
         self.unmounted_images = images["player_unmounted"]
         self.spawn_images = images["spawn"]
@@ -13,29 +16,17 @@ class Player(pygame.sprite.Sprite):
         self.frameNum = 2
         self.image = self.images[self.frameNum]
         self.rect = self.image.get_rect()
-        self.next_update_time = 0
-        self.next_anim_time = 0
-        self.x = 415
-        self.y = 350
-        self.facingRight = True
-        self.x_speed = 0
-        self.y_speed = 0
-        self.targetXSpeed = 10
         self.flap = False
-        self.walking = True
         self.playerChannel = pygame.mixer.Channel(0)
         self.flap_sound = pygame.mixer.Sound("resources/sound/joustflaedit.ogg")
         self.skid_sound = pygame.mixer.Sound("resources/sound/joustski.ogg")
         self.bump_sound = pygame.mixer.Sound("resources/sound/joustthu.ogg")
         self.egg_sound = pygame.mixer.Sound("resources/sound/joustegg.ogg")
         self.lives = 4
-        self.spawning = True
         self.alive = 2
-
 
     def update(self, current_time, keys, platforms, enemies, god, eggs, score):
         # Update every 30 milliseconds
-
         if self.next_update_time < current_time:
             self.next_update_time = current_time + 30
             if self.alive == 2:
@@ -63,23 +54,19 @@ class Player(pygame.sprite.Sprite):
                             self.flap = True
                     else:
                         self.flap = False
+
                     self.x += self.x_speed
                     self.y += self.y_speed
-                    if not self.walking:
-                        self.y_speed += 0.4
-                    if self.y_speed > 10:
-                        self.y_speed = 10
-                    if self.y_speed < -10:
-                        self.y_speed = -10
-                    if self.y < 0:
-                        self.y = 0
-                        self.y_speed = 2
+
+                    self.player_velocity()
+
                     if self.y > 570:
                         self.die()
                     if self.x < -48:
                         self.x = 900
                     if self.x > 900:
                         self.x = -48
+
                     self.rect.topleft = (self.x, self.y)
 
                     # check for enemy collision
@@ -88,10 +75,9 @@ class Player(pygame.sprite.Sprite):
                     for bird in collided_birds:
                         # check each bird to see if above or below
                         if bird.y > self.y and bird.alive:
+                            bird.killed(eggs, self.egg_images, self)
                             self.bounce(bird)
-                            bird.killed(eggs, self.egg_images)
                             bird.bounce(self)
-                            self.y_speed = -self.y_speed
                             score.score += 1000
                         elif bird.y < self.y - 5 and bird.alive and not god.on:
                             self.bounce(bird)
@@ -125,7 +111,6 @@ class Player(pygame.sprite.Sprite):
 
                     self.rect.topleft = (self.x, self.y)
                     if self.walking:
-                        # if walking
                         if self.next_anim_time < current_time:
                             if self.x_speed != 0:
                                 if (self.x_speed > 5 and keys[pygame.K_LEFT]) or (
@@ -150,7 +135,7 @@ class Player(pygame.sprite.Sprite):
 
                         else:
                             self.image = self.images[5]
-                    if self.x_speed < 0 or (self.x_speed == 0 and self.facingRight == False):
+                    if self.x_speed < 0 or (self.x_speed == 0 and not self.facingRight):
                         self.image = pygame.transform.flip(self.image, True, False)
                         self.facingRight = False
                     else:
@@ -173,15 +158,7 @@ class Player(pygame.sprite.Sprite):
 
                 self.x = self.x + self.x_speed
                 self.y = self.y + self.y_speed
-                if not self.walking:
-                    self.y_speed += 0.4
-                if self.y_speed > 10:
-                    self.y_speed = 10
-                if self.y_speed < -10:
-                    self.y_speed = -10
-                if self.y < 0:  # can't go off the top
-                    self.y = 0
-                    self.y_speed = 2
+                self.player_velocity()
 
                 if self.x < -48:  # off the left. remove entirely
                     self.image = self.images[7]
@@ -203,21 +180,10 @@ class Player(pygame.sprite.Sprite):
                 else:
                     for collidedPlatform in collided_platforms:
                         self.bounce(collidedPlatform)
+
                 self.rect.topleft = (self.x, self.y)
-                if self.walking:
-                    if self.next_anim_time < current_time:
-                        if self.x_speed != 0:
-                            self.next_anim_time = current_time + 100 / abs(self.x_speed)
-                            self.frameNum += 1
-                            if self.frameNum > 3:
-                                self.frameNum = 0
-                            else:
-                                self.frameNum = 3
-                else:
-                    if self.flap > 0:
-                        self.frameNum = 6
-                    else:
-                        self.frameNum = 5
+                self.animate(current_time)
+
                 self.image = self.unmounted_images[self.frameNum]
                 if self.x_speed < 0 or (self.x_speed == 0 and not self.facingRight):
                     self.image = pygame.transform.flip(self.image, True, False)
@@ -230,26 +196,30 @@ class Player(pygame.sprite.Sprite):
 
     def bounce(self, collider):
         collided = False
-        if self.y < (collider.y - 20) and (((collider.x - 40) < self.x < (collider.rect.right - 10))):
+        if self.y < (collider.y - 20) and ((collider.x - 40) < self.x < (collider.rect.right - 10)):
             # coming in from the top?
-            self.walking = True
-            self.y_speed = 0
-            self.y = collider.y - self.rect.height + 1
+            if type(collider) is Enemy and collider.alive:
+                self.y_speed = -3
+                self.y = collider.y - self.rect.height
+            else:
+                self.walking = True
+                self.y_speed = 0
+                self.y = collider.y - self.rect.height + 1
         elif self.x < collider.x:
             # colliding from left side
             collided = True
             self.x = self.x - 10
-            self.x_speed = -2
+            self.x_speed = -5
         elif self.x > collider.rect.right - 50:
             # colliding from right side
             collided = True
             self.x = self.x + 10
-            self.x_speed = 2
+            self.x_speed = 5
         elif self.y > collider.y:
             # colliding from bottom
             collided = True
             self.y = self.y + 10
-            self.y_speed = 0
+            self.y_speed = -self.y_speed
 
         if collided:
             self.playerChannel.play(self.bump_sound)

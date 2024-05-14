@@ -6,6 +6,7 @@ import random
 
 from enemy import Enemy
 from player import Player
+from actors import Platform, Godmode
 
 pygame.init()
 pygame.mixer.pre_init(44100, -16, 2, 512)
@@ -13,45 +14,17 @@ pygame.mixer.pre_init(44100, -16, 2, 512)
 
 def load_sliced_sprites(w, h, filename):
     # returns a list of image frames sliced from file
-    images = []
+    results = []
     master_image = pygame.image.load(filename).convert_alpha()
     master_width, master_height = master_image.get_size()
     for i in range(int(master_width / w)):
-        images.append(master_image.subsurface((i * w, 0, w, h)))
-    return images
+        results.append(master_image.subsurface((i * w, 0, w, h)))
+    return results
 
 
 class Score:
     def __init__(self):
         self.score = 0
-
-
-class Platform(pygame.sprite.Sprite):
-    def __init__(self, image, x, y):
-        pygame.sprite.Sprite.__init__(self)  # call Sprite initializer
-        self.image = image
-        self.rect = self.image.get_rect()
-        self.x = x
-        self.y = y
-        self.rect.topleft = (x, y)
-        self.right = self.rect.right
-        self.top = self.rect.top
-
-
-class Godmode(pygame.sprite.Sprite):
-    def __init__(self):
-        pygame.sprite.Sprite.__init__(self)  # call Sprite initializer
-        self.pic = pygame.image.load("resources/graphics/god.png")
-        self.image = self.pic
-        self.on = False
-        self.rect = self.image.get_rect()
-        self.rect.topleft = (850, 0)
-        self.timer = pygame.time.get_ticks()
-
-    def toggle(self, current_time):
-        if current_time > self.timer:
-            self.on = not self.on
-            self.timer = current_time + 1000
 
 
 def generate_enemies(images, enemies, spawn_points, enemies_to_spawn):
@@ -209,7 +182,6 @@ async def main():
         pygame.display.update(enemiesRects)
         pygame.display.update(eggRects)
         pygame.display.update(godrect)
-#        pygame.display.update()
         await asyncio.sleep(0)
 
 
