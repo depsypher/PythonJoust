@@ -18,6 +18,10 @@ class Enemy(Character):
         self.x = start_pos[0]
         self.y = start_pos[1]
         self.x_speed = random.randint(3, 10)
+        if random.randint(0, 1) < 1:
+            self.x_speed = -self.x_speed
+            self.facingRight = False
+
         self.flapCount = 0
         self.alive = True
 
@@ -32,6 +36,9 @@ class Enemy(Character):
             if self.spawning:
                 self.frameNum += 1
                 self.image = self.spawn_images[self.frameNum]
+                if not self.facingRight:
+                    self.image = pygame.transform.flip(self.image, True, False)
+
                 self.next_update_time += 100
                 self.rect.topleft = (self.x, self.y)
                 if self.frameNum == 5:
