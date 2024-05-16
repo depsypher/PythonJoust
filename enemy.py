@@ -26,7 +26,7 @@ class Enemy(Character):
         self.alive = True
 
     def killed(self, eggs, egg_images, killer):
-        eggs.add(Egg(egg_images, self.x, killer.y + killer.rect.height + 1, killer.x_speed, max(killer.y_speed, 1)))
+        eggs.add(Egg(egg_images, self.x, self.y + 20, self.x_speed + killer.x_speed, self.y_speed + killer.y_speed - 1))
         self.alive = False
 
     def update(self, current_time, keys, platforms, god):

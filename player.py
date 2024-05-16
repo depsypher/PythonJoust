@@ -50,7 +50,7 @@ class Player(Character):
                             self.playerChannel.stop()
                             self.flap_sound.play(0)
                             if self.y_speed > -250:
-                                self.y_speed -= 3
+                                self.y_speed -= 3.5
                             self.flap = True
                     else:
                         self.flap = False
@@ -70,8 +70,8 @@ class Player(Character):
                     self.rect.topleft = (self.x, self.y)
 
                     # check for enemy collision
-                    collided_birds = pygame.sprite.spritecollide(self, enemies, False,
-                                                                collided=pygame.sprite.collide_mask)
+                    collided_birds = pygame.sprite.spritecollide(
+                            self, enemies, False, collided=pygame.sprite.collide_mask)
                     for bird in collided_birds:
                         # check each bird to see if above or below
                         if bird.y > self.y and bird.alive:
@@ -95,15 +95,16 @@ class Player(Character):
                         self.y_speed = 0
                     else:
                         collided = False
-                        # check for platform collision
-                        collided_platforms = pygame.sprite.spritecollide(self, platforms, False)
+                        collided_platforms = pygame.sprite.spritecollide(
+                                self, platforms, False, collided=pygame.sprite.collide_mask)
 
                         for collidedPlatform in collided_platforms:
                             collided = self.bounce(collidedPlatform)
                         if collided:
                             self.playerChannel.play(self.bump_sound)
 
-                    collided_eggs = pygame.sprite.spritecollide(self, eggs, False)
+                    collided_eggs = pygame.sprite.spritecollide(
+                            self, eggs, False, collided=pygame.sprite.collide_mask)
                     for collided_egg in collided_eggs:
                         self.egg_sound.play(0)
                         score.score += 250
@@ -124,7 +125,7 @@ class Player(Character):
                                     self.frameNum += 1
                                     if self.frameNum > 3:
                                         self.frameNum = 0
-                            elif self.frameNum == 4:
+                            else:
                                 self.frameNum = 3
                                 self.playerChannel.stop()
 

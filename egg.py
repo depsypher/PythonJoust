@@ -40,8 +40,9 @@ class Egg(pygame.sprite.Sprite):
             self.next_update_time = current_time + 30
             self.move()
             self.rect.topleft = (self.x, self.y)
-            collided_platforms = pygame.sprite.spritecollide(self, platforms, False)#,
-#            collided=pygame.sprite.collide_mask)
+            collided_platforms = pygame.sprite.spritecollide(
+                self, platforms, False, collided=pygame.sprite.collide_mask
+            )
             if (((40 < self.y < 45) or (250 < self.y < 255)) and (
                     self.x < 0 or self.x > 860)):  # catch when it is rolling between screens
                 self.y_speed = 0
