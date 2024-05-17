@@ -12,6 +12,11 @@ pygame.init()
 pygame.mixer.pre_init(44100, -16, 2, 512)
 
 
+class Score:
+    def __init__(self):
+        self.score = 0
+
+
 def load_sliced_sprites(w, h, filename):
     # returns a list of image frames sliced from file
     results = []
@@ -20,11 +25,6 @@ def load_sliced_sprites(w, h, filename):
     for i in range(int(master_width / w)):
         results.append(master_image.subsurface((i * w, 0, w, h)))
     return results
-
-
-class Score:
-    def __init__(self):
-        self.score = 0
 
 
 def generate_enemies(images, enemies, spawn_points, enemies_to_spawn):
@@ -80,7 +80,7 @@ god_sprite = pygame.sprite.RenderUpdates()
 
 lifeimage = pygame.image.load("resources/graphics/life.png").convert_alpha()
 
-images = {
+image_sprites = {
     "enemy":    load_sliced_sprites(60, 58, "resources/graphics/enemies2.png"),
     "spawn":    load_sliced_sprites(60, 60, "resources/graphics/spawn1.png"),
     "unmounted": load_sliced_sprites(60, 60, "resources/graphics/unmounted.png"),
@@ -90,36 +90,28 @@ images = {
     "player_unmounted": load_sliced_sprites(60, 60, "resources/graphics/playerUnMounted.png"),
 }
 
-player_bird = Player(images)
+player_bird = Player(image_sprites)
 
 god = Godmode()
 god_sprite.add(Godmode())
 spawn_points = [[690, 248], [420, 500], [420, 80], [50, 255]]
 
-platform_images = [
-    pygame.image.load("resources/graphics/plat1.png"),
-    pygame.image.load("resources/graphics/plat2.png"),
-    pygame.image.load("resources/graphics/plat3.png"),
-    pygame.image.load("resources/graphics/plat4.png"),
-    pygame.image.load("resources/graphics/plat5.png"),
-    pygame.image.load("resources/graphics/plat6.png"),
-    pygame.image.load("resources/graphics/plat7.png"),
-    pygame.image.load("resources/graphics/plat8.png")
-]
 
-# we create each platform by sending it the relevant platform image,
-# the x position of the platform and the y position
-plat1 = Platform(platform_images[0], 200,550)
-plat2 = Platform(platform_images[1], 350, 395)
-plat3 = Platform(platform_images[2], 350, 130)
-plat4 = Platform(platform_images[3], 0, 100)
-plat5 = Platform(platform_images[4], 759, 100)
-plat6 = Platform(platform_images[5], 0, 310)
-plat7 = Platform(platform_images[6], 759, 310)
-plat8 = Platform(platform_images[7], 600, 290)
+class Platforms:
+    # we create each platform by sending it the relevant platform image,
+    # the x position of the platform and the y position
+    p1 = Platform(pygame.image.load("resources/graphics/plat1.png"), 200,550)
+    p2 = Platform(pygame.image.load("resources/graphics/plat2.png"), 350, 395)
+    p3 = Platform(pygame.image.load("resources/graphics/plat3.png"), 350, 130)
+    p4 = Platform(pygame.image.load("resources/graphics/plat4.png"), 0, 100)
+    p5 = Platform(pygame.image.load("resources/graphics/plat5.png"), 759, 100)
+    p6 = Platform(pygame.image.load("resources/graphics/plat6.png"), 0, 312)
+    p7 = Platform(pygame.image.load("resources/graphics/plat7.png"), 769, 312)
+    p8 = Platform(pygame.image.load("resources/graphics/plat8.png"), 600, 288)
+    all = [p1, p2, p3, p4, p5, p6, p7, p8]
 
 player.add(player_bird)
-platforms.add(plat1, plat2, plat3, plat4, plat5, plat6, plat7, plat8)
+platforms.add(Platforms.all)
 pygame.display.update()
 next_spawn_time = pygame.time.get_ticks() + 2000
 enemies_to_spawn = 6  # test. make 6 enemies to start
@@ -138,7 +130,7 @@ async def main():
 
         # make enemies
         if current_time > next_spawn_time and enemies_to_spawn > 0:
-            enemies, enemies_to_spawn = generate_enemies(images, enemies, spawn_points, enemies_to_spawn)
+            enemies, enemies_to_spawn = generate_enemies(image_sprites, enemies, spawn_points, enemies_to_spawn)
             next_spawn_time = current_time + 5000
 
         for event in pygame.event.get():
@@ -171,7 +163,7 @@ async def main():
         lavarect2 = draw_lava2(screen)
 
         draw_lives(player_bird.lives, screen, lifeimage)
-        draw_score(score.score, screen, images["digits"])
+        draw_score(score.score, screen, image_sprites["digits"])
 
         godrect = god_sprite.draw(screen) if god.on else pygame.Rect(850, 0, 50, 50)
 

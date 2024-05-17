@@ -20,7 +20,7 @@ class Enemy(Character):
         self.x_speed = random.randint(3, 10)
         if random.randint(0, 1) < 1:
             self.x_speed = -self.x_speed
-            self.facingRight = False
+            self.facing_right = False
 
         self.flapCount = 0
         self.alive = True
@@ -34,14 +34,14 @@ class Enemy(Character):
             self.next_update_time = current_time + 50
 
             if self.spawning:
-                self.frameNum += 1
-                self.image = self.spawn_images[self.frameNum]
-                if not self.facingRight:
+                self.frame += 1
+                self.image = self.spawn_images[self.frame]
+                if not self.facing_right:
                     self.image = pygame.transform.flip(self.image, True, False)
 
                 self.next_update_time += 100
                 self.rect.topleft = (self.x, self.y)
-                if self.frameNum == 5:
+                if self.frame == 5:
                     self.spawning = False
             else:
                 # see if we need to accelerate
@@ -55,9 +55,6 @@ class Enemy(Character):
                         self.flap = 3
                 else:
                     self.flap -= 1
-
-                self.x += self.x_speed
-                self.y += self.y_speed
 
                 self.player_velocity()
 
@@ -93,15 +90,15 @@ class Enemy(Character):
                 self.animate(current_time)
 
                 if self.alive:
-                    self.image = self.images[((self.enemyType * 7) + self.frameNum)]
+                    self.image = self.images[((self.enemyType * 7) + self.frame)]
                 else:
                     # show the unmounted sprite
-                    self.image = self.unmounted_images[self.frameNum]
-                if self.x_speed < 0 or (self.x_speed == 0 and not self.facingRight):
+                    self.image = self.unmounted_images[self.frame]
+                if self.x_speed < 0 or (self.x_speed == 0 and not self.facing_right):
                     self.image = pygame.transform.flip(self.image, True, False)
-                    self.facingRight = False
+                    self.facing_right = False
                 else:
-                    self.facingRight = True
+                    self.facing_right = True
 
     def bounce(self, collider):
         collided = False
