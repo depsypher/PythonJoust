@@ -78,7 +78,7 @@ eggs = pygame.sprite.RenderUpdates()
 platforms = pygame.sprite.RenderUpdates()
 god_sprite = pygame.sprite.RenderUpdates()
 
-lifeimage = pygame.image.load("resources/graphics/life.png").convert_alpha()
+life_image = pygame.image.load("resources/graphics/life.png").convert_alpha()
 
 image_sprites = {
     "enemy":    load_sliced_sprites(60, 58, "resources/graphics/enemies2.png"),
@@ -162,7 +162,7 @@ async def main():
         platRects = platforms.draw(screen)
         lavarect2 = draw_lava2(screen)
 
-        draw_lives(player_bird.lives, screen, lifeimage)
+        draw_lives(player_bird.lives, screen, life_image)
         draw_score(score.score, screen, image_sprites["digits"])
 
         godrect = god_sprite.draw(screen) if god.on else pygame.Rect(850, 0, 50, 50)

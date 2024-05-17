@@ -25,6 +25,7 @@ class Player(Character):
         self.lives = 4
         self.alive = "spawning"
         self.skidding = 0
+        self.spawning = 20
 
     def update(self, current_time, keys, platforms, enemies, god, eggs, score):
         if current_time < self.next_update_time:
@@ -33,14 +34,19 @@ class Player(Character):
         # Update every 30 milliseconds
         self.next_update_time = current_time + 30
 
+        if self.spawning == 0:
+            self.alive = "mounted"
+
         if self.alive == "spawning":
-            self.frame += 1
-            self.image = self.spawn_images[self.frame]
             self.next_update_time += 100
             self.rect.topleft = (self.x, self.y)
-            if self.frame == 5:
-                self.frame = 4
+            self.spawning -= 1
+            self.frame = 5 if self.frame == 6 else self.frame + 1
+            self.image = self.spawn_images[self.frame]
+            if self.frame >= 5 and (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or keys[pygame.K_SPACE]):
+                self.spawning = 0
                 self.alive = "mounted"
+                self.do_mounted(current_time, eggs, enemies, god, keys, platforms, score)
         elif self.alive == "mounted" or self.alive == "skidding":
             self.do_mounted(current_time, eggs, enemies, god, keys, platforms, score)
         elif self.alive == "unmounted":
@@ -128,13 +134,12 @@ class Player(Character):
         if self.walking:
             if self.next_anim_time < current_time:
                 if self.x_speed != 0:
-                    if self.skidding:
+                    if self.skidding > 0:
                         self.frame = 4
-                    elif (self.x_speed > 5 and keys[pygame.K_LEFT]) or (
-                            self.x_speed < -5 and keys[pygame.K_RIGHT]):
-                        if self.frame != 4:
-                            self.playerChannel.play(self.skid_sound)
-                            self.facing_right = True if self.x_speed > 0 else False
+                    elif (self.x_speed > 6 and keys[pygame.K_LEFT]) or (
+                            self.x_speed < -6 and keys[pygame.K_RIGHT]):
+                        self.playerChannel.play(self.skid_sound)
+                        self.facing_right = True if self.x_speed > 0 else False
                         self.frame = 4
                         self.skidding = 13
                     else:
@@ -181,10 +186,8 @@ class Player(Character):
             self.alive = "dead"
             self.next_update_time = current_time + 2000
         self.rect.topleft = (self.x, self.y)
-        # check for platform collision
-        collided_platforms = pygame.sprite.spritecollide(self, platforms, False,
-                                                         collided=pygame.sprite.collide_mask)
 
+        # check for platform collision
         collided = False
         collided_platforms = pygame.sprite.spritecollide(
             self, platforms, False, collided=pygame.sprite.collide_mask)
@@ -245,6 +248,7 @@ class Player(Character):
 
     def die(self):
         self.lives -= 1
+        self.spawning = 20
         self.alive = "unmounted"
 
     def respawn(self):
