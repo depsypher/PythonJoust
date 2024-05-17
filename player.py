@@ -24,6 +24,7 @@ class Player(Character):
         self.playerChannel = pygame.mixer.Channel(0)
         self.lives = 4
         self.alive = "spawning"
+        self.skidding = 0
 
     def update(self, current_time, keys, platforms, enemies, god, eggs, score):
         if current_time < self.next_update_time:
@@ -40,7 +41,7 @@ class Player(Character):
             if self.frame == 5:
                 self.frame = 4
                 self.alive = "mounted"
-        elif self.alive == "mounted":
+        elif self.alive == "mounted" or self.alive == "skidding":
             self.do_mounted(current_time, eggs, enemies, god, keys, platforms, score)
         elif self.alive == "unmounted":
             self.do_unmounted(current_time, platforms)
@@ -48,21 +49,27 @@ class Player(Character):
             self.respawn()
 
     def do_mounted(self, current_time, eggs, enemies, god, keys, platforms, score):
-        if keys[pygame.K_LEFT]:
+        if self.skidding > 0:
+            if self.skidding == 1:
+                self.x_speed = 0
+            self.skidding -= 1
+        elif keys[pygame.K_LEFT]:
             self.facing_right = False
             if self.walking:
-                self.x_speed -= 1
+                self.x_speed -= 0.1 if self.x_speed > -3.0 else 0.8
         elif keys[pygame.K_RIGHT]:
             self.facing_right = True
             if self.walking:
-                self.x_speed += 1
+                self.x_speed += 0.1 if self.x_speed < 3.0 else 0.8
 
         if keys[pygame.K_SPACE]:
+            self.skidding = 0
+            self.walking = False
             if keys[pygame.K_LEFT]:
-                self.x_speed -= 0.8
+                self.x_speed -= 0.6 if self.x_speed > -2.0 else 1.2
 
             if keys[pygame.K_RIGHT]:
-                self.x_speed += 0.8
+                self.x_speed += 0.6 if self.x_speed < 2.0 else 1.2
 
             if not self.flap:
                 self.y_speed -= 3.5
@@ -76,6 +83,7 @@ class Player(Character):
 
         if self.y > 570:
             self.die()
+
         if self.x < -48:
             self.x = 900
         if self.x > 900:
@@ -100,23 +108,17 @@ class Player(Character):
                 self.bounce(bird)
                 bird.bounce(self)
 
-        self.walking = False
-        if (((40 < self.y < 45) or (250 < self.y < 255)) and (
-                self.x < 0 or self.x > 860)):  # catch when it is walking between screens
-            self.walking = True
-            self.y_speed = 0
-        else:
-            collided = False
-            collided_platforms = pygame.sprite.spritecollide(
-                self, platforms, False, collided=pygame.sprite.collide_mask)
+        collided = False
+        collided_platforms = pygame.sprite.spritecollide(
+            self, platforms, False, collided=pygame.sprite.collide_mask)
 
-            for collidedPlatform in collided_platforms:
-                collided = self.bounce(collidedPlatform)
-            if collided:
-                self.playerChannel.play(self.bump_sound)
+        for collidedPlatform in collided_platforms:
+            collided = self.bounce(collidedPlatform)
 
-        collided_eggs = pygame.sprite.spritecollide(
-            self, eggs, False, collided=pygame.sprite.collide_mask)
+        if not collided:
+            self.walking = False
+
+        collided_eggs = pygame.sprite.spritecollide(self, eggs, False, collided=pygame.sprite.collide_mask)
         for collided_egg in collided_eggs:
             self.egg_sound.play(0)
             score.score += 250
@@ -126,14 +128,18 @@ class Player(Character):
         if self.walking:
             if self.next_anim_time < current_time:
                 if self.x_speed != 0:
-                    if (self.x_speed > 5 and keys[pygame.K_LEFT]) or (
+                    if self.skidding:
+                        self.frame = 4
+                    elif (self.x_speed > 5 and keys[pygame.K_LEFT]) or (
                             self.x_speed < -5 and keys[pygame.K_RIGHT]):
-
                         if self.frame != 4:
                             self.playerChannel.play(self.skid_sound)
+                            self.facing_right = True if self.x_speed > 0 else False
                         self.frame = 4
+                        self.skidding = 13
                     else:
-                        self.next_anim_time = current_time + 200 / abs(self.x_speed)
+                        ms = 25 + (12.0 / abs(self.x_speed)) * 3
+                        self.next_anim_time = current_time + ms
                         self.frame += 1
                         if self.frame > 3:
                             self.frame = 0
@@ -143,15 +149,10 @@ class Player(Character):
 
             self.image = self.mounted_images[self.frame]
         else:
-            if self.flap:
-                self.image = self.mounted_images[6]
-            else:
-                self.image = self.mounted_images[5]
-        if self.x_speed < 0 or (self.x_speed == 0 and not self.facing_right):
+            self.image = self.mounted_images[6 if self.flap else 5]
+
+        if not self.facing_right:
             self.image = pygame.transform.flip(self.image, True, False)
-            self.facing_right = False
-        else:
-            self.facing_right = True
 
     def do_unmounted(self, current_time, platforms):
         # unmounted player, lone bird
@@ -183,14 +184,17 @@ class Player(Character):
         # check for platform collision
         collided_platforms = pygame.sprite.spritecollide(self, platforms, False,
                                                          collided=pygame.sprite.collide_mask)
-        self.walking = False
-        if (((40 < self.y < 45) or (220 < self.y < 225)) and (
-                self.x < 0 or self.x > 860)):  # catch when it is walking between screens
-            self.walking = True
-            self.y_speed = 0
-        else:
-            for collidedPlatform in collided_platforms:
-                self.bounce(collidedPlatform)
+
+        collided = False
+        collided_platforms = pygame.sprite.spritecollide(
+            self, platforms, False, collided=pygame.sprite.collide_mask)
+
+        for collidedPlatform in collided_platforms:
+            collided = self.bounce(collidedPlatform)
+
+        if not collided:
+            self.walking = False
+
         self.rect.topleft = (self.x, self.y)
         self.animate(current_time)
         self.image = self.unmounted_images[self.frame]
@@ -206,33 +210,36 @@ class Player(Character):
         if not enemy and self.walking and (self.y > collider.y - 40):
             self.x -= self.x_speed * 2
             self.x_speed = -self.x_speed
+            self.playerChannel.play(self.bump_sound)
         elif self.y < (collider.y - 20) and ((collider.x - 40) < self.x < (collider.rect.right - 10)):
             # coming in from the top?
             if enemy:
                 self.y_speed = max(-self.y_speed, -6)
                 self.y = collider.y - self.rect.height - 1
+                self.playerChannel.play(self.bump_sound)
             else:
+                collided = True
                 self.walking = True
                 self.y_speed = 0
                 self.y = collider.y - self.rect.height + 1
         elif self.x < collider.x:
             # colliding from left side
             collided = True
+            self.playerChannel.play(self.bump_sound)
             self.x = self.x - 10
             self.x_speed = -5
         elif self.x > collider.rect.right - 50:
             # colliding from right side
             collided = True
+            self.playerChannel.play(self.bump_sound)
             self.x = self.x + 10
             self.x_speed = 5
         elif self.y > collider.y:
             # colliding from bottom
             collided = True
+            self.playerChannel.play(self.bump_sound)
             self.y = self.y + 10
             self.y_speed = -self.y_speed
-
-        if collided:
-            self.playerChannel.play(self.bump_sound)
 
         return collided
 
@@ -245,10 +252,11 @@ class Player(Character):
         self.image = self.mounted_images[self.frame]
         self.rect = self.image.get_rect()
         self.x = 415
-        self.y = 350
+        self.y = 336
         self.facing_right = True
         self.x_speed = 0
         self.y_speed = 0
         self.flap = False
         self.walking = True
+        self.skidding = False
         self.alive = "spawning"

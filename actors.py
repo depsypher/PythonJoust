@@ -5,7 +5,7 @@ class Character(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
         self.x = 415
-        self.y = 350
+        self.y = 336
         self.x_speed = 0
         self.y_speed = 0
         self.flap = 0
