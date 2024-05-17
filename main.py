@@ -152,7 +152,7 @@ async def main():
 
         player.update(current_time, keys, platforms, enemies, god, eggs, score)
         platforms.update()
-        enemies.update(current_time, keys, platforms, god)
+        enemies.update(current_time, keys, platforms, enemies)
         eggs.update(current_time, platforms)
 
         enemiesRects = enemies.draw(screen)
