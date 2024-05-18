@@ -88,6 +88,7 @@ class Player(Character):
         self.player_velocity()
 
         if self.y > 570:
+            score.reset()
             self.die()
 
         if self.x < -48:
@@ -108,6 +109,7 @@ class Player(Character):
             elif bird.y < self.y - 5 and bird.alive and not god.on:
                 self.bounce(bird)
                 bird.bounce(self)
+                score.reset()
                 self.die()
                 break
             elif bird.alive:
@@ -127,7 +129,7 @@ class Player(Character):
         collided_eggs = pygame.sprite.spritecollide(self, eggs, False, collided=pygame.sprite.collide_mask)
         for collided_egg in collided_eggs:
             self.egg_sound.play(0)
-            score.score += 250
+            score.collect_egg()
             collided_egg.kill()
 
         self.rect.topleft = (self.x, self.y)

@@ -15,6 +15,25 @@ pygame.mixer.pre_init(44100, -16, 2, 512)
 class Score:
     def __init__(self):
         self.score = 0
+        self.eggs_collected = 0
+        self.egg_points = [250, 500, 750, 1000]
+
+    def collect_egg(self):
+        points = self.egg_points[min(self.eggs_collected, len(self.egg_points) - 1)]
+        self.score += points
+        self.eggs_collected += 1
+        return points
+
+    def reset(self):
+        self.eggs_collected = 0
+
+    def draw(self, screen, digits):
+        screen.blit(digits[self.score % 10], [353, 570])
+        screen.blit(digits[(self.score % 100) // 10], [335, 570])
+        screen.blit(digits[(self.score % 1000) // 100], [317, 570])
+        screen.blit(digits[(self.score % 10000) // 1000], [299, 570])
+        screen.blit(digits[(self.score % 100000) // 10000], [281, 570])
+        screen.blit(digits[(self.score % 1000000) // 100000], [263, 570])
 
 
 def load_sliced_sprites(w, h, filename):
@@ -55,15 +74,6 @@ def draw_lives(lives, screen, life_image):
     for num in range(lives):
         x = start_x + num * 20
         screen.blit(life_image, [x, 570])
-
-
-def draw_score(score, screen, digits):
-    screen.blit(digits[score % 10], [353, 570])
-    screen.blit(digits[(score % 100) // 10], [335, 570])
-    screen.blit(digits[(score % 1000) // 100], [317, 570])
-    screen.blit(digits[(score % 10000) // 1000], [299, 570])
-    screen.blit(digits[(score % 100000) // 10000], [281, 570])
-    screen.blit(digits[(score % 1000000) // 100000], [263, 570])
 
 
 running = True
@@ -163,7 +173,7 @@ async def main():
         lavarect2 = draw_lava2(screen)
 
         draw_lives(player_bird.lives, screen, life_image)
-        draw_score(score.score, screen, image_sprites["digits"])
+        score.draw(screen, image_sprites["digits"])
 
         godrect = god_sprite.draw(screen) if god.on else pygame.Rect(850, 0, 50, 50)
 
