@@ -3,6 +3,7 @@
 import asyncio
 import pygame
 import random
+import loader
 
 from enemy import Enemy
 from player import Player
@@ -36,22 +37,13 @@ class Score:
         screen.blit(digits[(self.score % 1000000) // 100000], [263, 570])
 
 
-def load_sliced_sprites(w, h, filename):
-    # returns a list of image frames sliced from file
-    results = []
-    master_image = pygame.image.load(filename).convert_alpha()
-    master_width, master_height = master_image.get_size()
-    for i in range(int(master_width / w)):
-        results.append(master_image.subsurface((i * w, 0, w, h)))
-    return results
-
-
-def generate_enemies(images, enemies, spawn_points, enemies_to_spawn):
+def generate_enemies(sprites, enemies, spawn_points, enemies_to_spawn):
     # makes 2 enemies at a time, at 2 random different spawn points
     chosen = spawn_points.copy()
     random.shuffle(chosen)
     for count in range(2):
-        enemies.add(Enemy(images, chosen[count], 0))
+        enemy_type = random.randint(0, 1)
+        enemies.add(Enemy(sprites, chosen[count], enemy_type))
         enemies_to_spawn -= 1
 
     return enemies, enemies_to_spawn
@@ -91,14 +83,20 @@ god_sprite = pygame.sprite.RenderUpdates()
 life_image = pygame.image.load("resources/graphics/life.png").convert_alpha()
 
 image_sprites = {
-    "enemy":    load_sliced_sprites(60, 58, "resources/graphics/enemies2.png"),
-    "spawn":    load_sliced_sprites(60, 60, "resources/graphics/spawn1.png"),
-    "unmounted": load_sliced_sprites(60, 60, "resources/graphics/unmounted.png"),
-    "egg":      load_sliced_sprites(40, 33, "resources/graphics/egg.png"),
-    "digits":   load_sliced_sprites(21, 21, "resources/graphics/digits.png"),
-    "bird":     load_sliced_sprites(60, 60, "resources/graphics/playerMounted.png"),
-    "player_unmounted": load_sliced_sprites(60, 60, "resources/graphics/playerUnMounted.png"),
+    "spawn":     loader.load_sliced_sprites(60, 60, "resources/graphics/spawn1.png"),
+    "egg":       loader.load_sliced_sprites(40, 33, "resources/graphics/egg.png"),
+    "digits":    loader.load_sliced_sprites(21, 21, "resources/graphics/digits.png"),
+    "bird":      loader.load_sliced_sprites(60, 60, "resources/graphics/playerMounted.png"),
+    "player_unmounted": loader.load_sliced_sprites(60, 60, "resources/graphics/playerUnMounted.png"),
 }
+
+
+class Sprites:
+    buzzard = loader.load_sprite(191, 44, 20, 14, 3, 3, 7, "resources/graphics/spritesheet.png")
+    bounder = loader.load_sprite(586, 44, 12, 7, 3, 0, 1, "resources/graphics/spritesheet.png")
+    hunter = loader.load_sprite(35, 69, 12, 7, 3, 0, 1, "resources/graphics/spritesheet.png")
+    spawn = loader.load_sliced_sprites(60, 60, "resources/graphics/spawn1.png")
+
 
 player_bird = Player(image_sprites)
 
@@ -140,7 +138,7 @@ async def main():
 
         # make enemies
         if current_time > next_spawn_time and enemies_to_spawn > 0:
-            enemies, enemies_to_spawn = generate_enemies(image_sprites, enemies, spawn_points, enemies_to_spawn)
+            enemies, enemies_to_spawn = generate_enemies(Sprites, enemies, spawn_points, enemies_to_spawn)
             next_spawn_time = current_time + 5000
 
         for event in pygame.event.get():
