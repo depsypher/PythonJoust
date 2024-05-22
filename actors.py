@@ -2,10 +2,14 @@ import pygame
 
 
 class Character(pygame.sprite.Sprite):
+    MAX_X_SPEED = 12
+    MAX_RISING_SPEED = -10
+    MAX_FALLING_SPEED = 14
+
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.x = 415
-        self.y = 336
+        self.x = 389
+        self.y = 491
         self.x_speed = 0
         self.y_speed = 0
         self.flap = 0
@@ -24,10 +28,10 @@ class Character(pygame.sprite.Sprite):
         if not self.walking:
             self.y_speed += 0.4
 
-        max_speed = 12 if self.walking else 10
-        self.x_speed = max(self.x_speed, -max_speed)
-        self.x_speed = min(self.x_speed, max_speed)
-        self.y_speed = max(self.y_speed, -max_speed)
+        self.x_speed = max(self.x_speed, -self.MAX_X_SPEED)
+        self.x_speed = min(self.x_speed, self.MAX_X_SPEED)
+        self.y_speed = max(self.y_speed, self.MAX_RISING_SPEED)
+        self.y_speed = min(self.y_speed, self.MAX_FALLING_SPEED)
 
         if self.y < 0:  # can't go off the top
             self.y = 0
@@ -62,6 +66,37 @@ class Platform(pygame.sprite.Sprite):
         self.top = self.rect.top
 
 
+class Score:
+    def __init__(self):
+        self.score = 0
+        self.eggs_collected = 0
+        self.egg_points = [250, 500, 750, 1000]
+
+    def collect_egg(self):
+        points = self.egg_points[min(self.eggs_collected, len(self.egg_points) - 1)]
+        self.score += points
+        self.eggs_collected += 1
+        return points
+
+    def die(self):
+        self.score += 50
+
+    def reset(self):
+        self.eggs_collected = 0
+
+    def draw(self, screen, digits):
+        xpos = 222
+        d = 10000000
+        seen = False
+        while d >= 10:
+            i = (self.score % d) // (d // 10)
+            if i != 0 or d == 10 or seen:
+                screen.blit(digits[i], [xpos, 570])
+                seen = True
+            d //= 10
+            xpos += 17
+
+
 class Godmode(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
@@ -75,4 +110,4 @@ class Godmode(pygame.sprite.Sprite):
     def toggle(self, current_time):
         if current_time > self.timer:
             self.on = not self.on
-            self.timer = current_time + 1000
+            self.timer = current_time + 100

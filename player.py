@@ -22,10 +22,11 @@ class Player(Character):
         self.rect = self.image.get_rect()
         self.flap = False
         self.playerChannel = pygame.mixer.Channel(0)
-        self.lives = 4
+        self.lives = 5
         self.alive = "spawning"
         self.skidding = 0
         self.spawning = 20
+        self.next_accel_time = 0
 
     def update(self, current_time, keys, platforms, enemies, god, eggs, score):
         if current_time < self.next_update_time:
@@ -61,24 +62,35 @@ class Player(Character):
             self.skidding -= 1
         elif keys[pygame.K_LEFT]:
             self.facing_right = False
-            if self.walking:
-                self.x_speed -= 0.1 if self.x_speed > -3.0 else 0.8
+            if self.walking and current_time > self.next_accel_time:
+                self.next_accel_time = current_time + 30 * 10
+                self.x_speed -= 1.5#0.1 if self.x_speed > -3.0 else 0.8
         elif keys[pygame.K_RIGHT]:
             self.facing_right = True
-            if self.walking:
-                self.x_speed += 0.1 if self.x_speed < 3.0 else 0.8
+            if self.walking and current_time > self.next_accel_time:
+                self.next_accel_time = current_time + 30 * 10
+                self.x_speed += 1.5#0.1 if self.x_speed < 3.0 else 0.8
 
         if keys[pygame.K_SPACE]:
             self.skidding = 0
             self.walking = False
-            if keys[pygame.K_LEFT]:
-                self.x_speed -= 0.6 if self.x_speed > -2.0 else 1.2
-
-            if keys[pygame.K_RIGHT]:
-                self.x_speed += 0.6 if self.x_speed < 2.0 else 1.2
 
             if not self.flap:
-                self.y_speed -= 3.5
+                if keys[pygame.K_LEFT]:
+                    if self.x_speed > -1.5:
+                        self.x_speed -= 1.5
+                    else:
+                        self.x_speed -= 3.0
+                    # self.x_speed -= 0.7 if self.x_speed > -2.5 else 1.3
+
+                if keys[pygame.K_RIGHT]:
+                    if self.x_speed < 1.5:
+                        self.x_speed += 1.5
+                    else:
+                        self.x_speed += 3.0
+                        # self.x_speed += 0.7 if self.x_speed < 2.5 else 1.3
+
+                self.y_speed -= 3
                 self.playerChannel.stop()
                 self.flap_sound.play(0)
                 self.flap = True
@@ -89,7 +101,7 @@ class Player(Character):
 
         if self.y > 570:
             score.reset()
-            self.die()
+            self.die(score)
 
         if self.x < -48:
             self.x = 900
@@ -99,7 +111,7 @@ class Player(Character):
         self.rect.topleft = (self.x, self.y)
 
         # check for enemy collision
-        for bird in pygame.sprite.spritecollide(self, enemies, False, collided=pygame.sprite.collide_mask):
+        for bird in pygame.sprite.spritecollide(self, enemies, False, pygame.sprite.collide_mask):
             # check each bird to see if above or below
             if bird.y > self.y and bird.alive:
                 bird.killed(eggs, self.egg_images, self)
@@ -110,7 +122,7 @@ class Player(Character):
                 self.bounce(bird)
                 bird.bounce(self)
                 score.reset()
-                self.die()
+                self.die(score)
                 break
             elif bird.alive:
                 self.bounce(bird)
@@ -118,7 +130,7 @@ class Player(Character):
 
         collided = False
         collided_platforms = pygame.sprite.spritecollide(
-            self, platforms, False, collided=pygame.sprite.collide_mask)
+            self, platforms, False, pygame.sprite.collide_mask)
 
         for collidedPlatform in collided_platforms:
             collided = self.bounce(collidedPlatform)
@@ -126,7 +138,7 @@ class Player(Character):
         if not collided:
             self.walking = False
 
-        collided_eggs = pygame.sprite.spritecollide(self, eggs, False, collided=pygame.sprite.collide_mask)
+        collided_eggs = pygame.sprite.spritecollide(self, eggs, False, pygame.sprite.collide_mask)
         for collided_egg in collided_eggs:
             self.egg_sound.play(0)
             score.collect_egg()
@@ -145,7 +157,7 @@ class Player(Character):
                         self.frame = 4
                         self.skidding = 13
                     else:
-                        ms = 25 + (12.0 / abs(self.x_speed)) * 3
+                        ms = (8.0 / abs(self.x_speed)) * 45
                         self.next_anim_time = current_time + ms
                         self.frame += 1
                         if self.frame > 3:
@@ -248,17 +260,18 @@ class Player(Character):
 
         return collided
 
-    def die(self):
+    def die(self, score):
         self.lives -= 1
         self.spawning = 20
         self.alive = "unmounted"
+        score.die()
 
     def respawn(self):
         self.frame = 1
         self.image = self.mounted_images[self.frame]
         self.rect = self.image.get_rect()
-        self.x = 415
-        self.y = 336
+        self.x = 389
+        self.y = 491
         self.facing_right = True
         self.x_speed = 0
         self.y_speed = 0

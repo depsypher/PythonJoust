@@ -7,46 +7,21 @@ import loader
 
 from enemy import Enemy
 from player import Player
-from actors import Platform, Godmode
+from actors import Platform, Godmode, Score
 
 pygame.init()
 pygame.mixer.pre_init(44100, -16, 2, 512)
 
 
-class Score:
-    def __init__(self):
-        self.score = 0
-        self.eggs_collected = 0
-        self.egg_points = [250, 500, 750, 1000]
-
-    def collect_egg(self):
-        points = self.egg_points[min(self.eggs_collected, len(self.egg_points) - 1)]
-        self.score += points
-        self.eggs_collected += 1
-        return points
-
-    def reset(self):
-        self.eggs_collected = 0
-
-    def draw(self, screen, digits):
-        screen.blit(digits[self.score % 10], [353, 570])
-        screen.blit(digits[(self.score % 100) // 10], [335, 570])
-        screen.blit(digits[(self.score % 1000) // 100], [317, 570])
-        screen.blit(digits[(self.score % 10000) // 1000], [299, 570])
-        screen.blit(digits[(self.score % 100000) // 10000], [281, 570])
-        screen.blit(digits[(self.score % 1000000) // 100000], [263, 570])
-
-
-def generate_enemies(sprites, enemies, spawn_points, enemies_to_spawn):
-    # makes 2 enemies at a time, at 2 random different spawn points
+def generate_enemies(sprites, enemies, spawn_points, to_spawn):
     chosen = spawn_points.copy()
     random.shuffle(chosen)
-    for count in range(2):
+    for count in range(1):
         enemy_type = random.randint(0, 1)
         enemies.add(Enemy(sprites, chosen[count], enemy_type))
-        enemies_to_spawn -= 1
+        to_spawn -= 1
 
-    return enemies, enemies_to_spawn
+    return enemies, to_spawn
 
 
 def draw_lava(screen):
@@ -62,9 +37,9 @@ def draw_lava2(screen):
 
 
 def draw_lives(lives, screen, life_image):
-    start_x = 375
+    start_x = 342
     for num in range(lives):
-        x = start_x + num * 20
+        x = start_x + num * 19
         screen.blit(life_image, [x, 570])
 
 
@@ -85,7 +60,6 @@ life_image = pygame.image.load("resources/graphics/life.png").convert_alpha()
 image_sprites = {
     "spawn":     loader.load_sliced_sprites(60, 60, "resources/graphics/spawn1.png"),
     "egg":       loader.load_sliced_sprites(40, 33, "resources/graphics/egg.png"),
-    "digits":    loader.load_sliced_sprites(21, 21, "resources/graphics/digits.png"),
     "bird":      loader.load_sliced_sprites(60, 60, "resources/graphics/playerMounted.png"),
     "player_unmounted": loader.load_sliced_sprites(60, 60, "resources/graphics/playerUnMounted.png"),
 }
@@ -96,30 +70,26 @@ class Sprites:
     bounder = loader.load_sprite(586, 44, 12, 7, 3, 0, 1, "resources/graphics/spritesheet.png")
     hunter = loader.load_sprite(35, 69, 12, 7, 3, 0, 1, "resources/graphics/spritesheet.png")
     spawn = loader.load_sliced_sprites(60, 60, "resources/graphics/spawn1.png")
+    alpha = loader.load_sprite(2, 93, 5, 7, 3, 6, 49, "resources/graphics/spritesheet.png")
+    p1 = Platform(pygame.image.load("resources/graphics/plat1.png"), 166, 550)
+    p2 = Platform(loader.load_image(370, 0, 64, 8, 3, "resources/graphics/spritesheet.png"), 315, 420)
+    p3 = Platform(loader.load_image(92, 0, 88, 9, 3, "resources/graphics/spritesheet.png"), 250, 201)
+    p4 = Platform(loader.load_image(0, 0, 33, 7, 3, "resources/graphics/spritesheet.png"), 0, 168)
+    p5 = Platform(loader.load_image(39, 0, 47, 7, 3, "resources/graphics/spritesheet.png"), 759, 168)
+    p6 = Platform(loader.load_image(186, 0, 63, 8, 3, "resources/graphics/spritesheet.png"), 0, 354)
+    p7 = Platform(loader.load_image(319, 0, 46, 7, 3, "resources/graphics/spritesheet.png"), 770, 354)
+    p8 = Platform(loader.load_image(254, 0, 58, 11, 3, "resources/graphics/spritesheet.png"), 606, 330)
+    platforms = [p1, p2, p3, p4, p5, p6, p7, p8]
 
 
 player_bird = Player(image_sprites)
 
 god = Godmode()
 god_sprite.add(Godmode())
-spawn_points = [[690, 248], [420, 500], [420, 80], [50, 255]]
-
-
-class Platforms:
-    # we create each platform by sending it the relevant platform image,
-    # the x position of the platform and the y position
-    p1 = Platform(pygame.image.load("resources/graphics/plat1.png"), 200,550)
-    p2 = Platform(pygame.image.load("resources/graphics/plat2.png"), 350, 395)
-    p3 = Platform(pygame.image.load("resources/graphics/plat3.png"), 350, 130)
-    p4 = Platform(pygame.image.load("resources/graphics/plat4.png"), 0, 100)
-    p5 = Platform(pygame.image.load("resources/graphics/plat5.png"), 759, 100)
-    p6 = Platform(pygame.image.load("resources/graphics/plat6.png"), 0, 312)
-    p7 = Platform(pygame.image.load("resources/graphics/plat7.png"), 769, 312)
-    p8 = Platform(pygame.image.load("resources/graphics/plat8.png"), 600, 288)
-    all = [p1, p2, p3, p4, p5, p6, p7, p8]
+spawn_points = [[690, 270], [378, 500], [327, 141], [48, 300]]
 
 player.add(player_bird)
-platforms.add(Platforms.all)
+platforms.add(Sprites.platforms)
 pygame.display.update()
 next_spawn_time = pygame.time.get_ticks() + 2000
 enemies_to_spawn = 6  # test. make 6 enemies to start
@@ -139,7 +109,7 @@ async def main():
         # make enemies
         if current_time > next_spawn_time and enemies_to_spawn > 0:
             enemies, enemies_to_spawn = generate_enemies(Sprites, enemies, spawn_points, enemies_to_spawn)
-            next_spawn_time = current_time + 5000
+            next_spawn_time = current_time + 2000
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -171,7 +141,7 @@ async def main():
         lavarect2 = draw_lava2(screen)
 
         draw_lives(player_bird.lives, screen, life_image)
-        score.draw(screen, image_sprites["digits"])
+        score.draw(screen, Sprites.alpha)
 
         godrect = god_sprite.draw(screen) if god.on else pygame.Rect(850, 0, 50, 50)
 
