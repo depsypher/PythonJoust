@@ -7,13 +7,13 @@ from actors import Character
 
 
 class Player(Character):
-    def __init__(self, images):
+    def __init__(self, images, sprites):
         super().__init__()
         self.frame = 2
         self.mounted_images = images["bird"]
-        self.unmounted_images = images["player_unmounted"]
+        self.unmounted_images = sprites.ostrich
         self.spawn_images = images["spawn"]
-        self.egg_images = images["egg"]
+        self.egg_images = sprites.egg
         self.flap_sound = pygame.mixer.Sound("resources/sound/joustflaedit.ogg")
         self.skid_sound = pygame.mixer.Sound("resources/sound/joustski.ogg")
         self.bump_sound = pygame.mixer.Sound("resources/sound/joustthu.ogg")
