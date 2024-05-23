@@ -1,6 +1,6 @@
 import random
 
-import pygame
+import pygame as pg
 
 from egg import Egg
 from actors import Character
@@ -17,7 +17,7 @@ class Enemy(Character):
         self.spawn_images = sprites.spawn
         self.enemyType = enemy_type
         self.image = self.spawn_images[0]
-        self.mask = pygame.mask.from_surface(self.image)
+        self.mask = pg.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.x = start_pos[0]
         self.y = start_pos[1]
@@ -30,15 +30,16 @@ class Enemy(Character):
         self.alive = True
 
     def build_mount(self, buzzard, mount):
-        surf = pygame.Surface((60, 60))
+        surf = pg.Surface((60, 60), pg.SRCALPHA)
         surf.blit(mount, (18, 0))
         surf.blit(buzzard, (0, 0))
-        surf.set_colorkey(pygame.color.Color('Black'))
-        self.mask = pygame.mask.from_surface(surf)
+        self.mask = pg.mask.from_surface(surf)
         return surf
 
     def killed(self, eggs, egg_images, killer):
-        eggs.add(Egg(egg_images, self.x, self.y + 20, self.x_speed + killer.x_speed, self.y_speed + killer.y_speed - 1))
+        egg_x_speed = self.x_speed + killer.x_speed
+        egg_y_speed = self.y_speed + killer.y_speed - 1
+        eggs.add(Egg(egg_images, self.x + 10, self.y + 20, egg_x_speed, egg_y_speed))
         self.alive = False
 
     def update(self, current_time, keys, platforms, enemies):
@@ -51,7 +52,7 @@ class Enemy(Character):
             self.frame += 1
             self.image = self.spawn_images[self.frame]
             if not self.facing_right:
-                self.image = pygame.transform.flip(self.image, True, False)
+                self.image = pg.transform.flip(self.image, True, False)
 
             self.next_update_time += 100
             self.rect.topleft = (self.x, self.y)
@@ -94,12 +95,12 @@ class Enemy(Character):
                 self.image = self.buzzard[self.frame]
 
             if self.x_speed < 0 or (self.x_speed == 0 and not self.facing_right):
-                self.image = pygame.transform.flip(self.image, True, False)
+                self.image = pg.transform.flip(self.image, True, False)
                 self.facing_right = False
             else:
                 self.facing_right = True
 
-            for bird in pygame.sprite.spritecollide(self, enemies, False, pygame.sprite.collide_mask):
+            for bird in pg.sprite.spritecollide(self, enemies, False, pg.sprite.collide_mask):
                 if bird is not self:
                     self.bounce(bird)
                     bird.bounce(self)
@@ -111,8 +112,7 @@ class Enemy(Character):
                 self.walking = True
                 self.y_speed = 0
             else:
-                collided_platforms = pygame.sprite.spritecollide(
-                    self, platforms, False, pygame.sprite.collide_mask)
+                collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
 
                 for collidedPlatform in collided_platforms:
                     self.bounce(collidedPlatform)
@@ -128,13 +128,13 @@ class Enemy(Character):
             self.y = collider.y - self.rect.height + 3
         elif self.x < collider.x:
             # colliding from left side
-            self.x = self.x - 10
+            self.x -= 3
             self.x_speed = -2
-        elif self.x > collider.rect.right - 50:
+        elif self.x > collider.rect.right + self.x_speed:
             # colliding from right side
-            self.x = self.x + 10
+            self.x += 3
             self.x_speed = 2
         elif self.y > collider.y:
             # colliding from bottom
-            self.y = self.y + 10
-            self.y_speed = 0
+            self.y += 3
+            self.y_speed = 1

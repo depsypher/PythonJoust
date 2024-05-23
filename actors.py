@@ -56,14 +56,13 @@ class Character(pygame.sprite.Sprite):
 
 class Platform(pygame.sprite.Sprite):
     def __init__(self, image, x, y):
-        pygame.sprite.Sprite.__init__(self)  # call Sprite initializer
+        pygame.sprite.Sprite.__init__(self)
         self.image = image
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
         self.rect.topleft = (x, y)
-        self.right = self.rect.right
-        self.top = self.rect.top
 
 
 class Score:

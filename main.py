@@ -38,6 +38,8 @@ def draw_lives(lives, screen, life_image):
 
 
 running = True
+paused = False
+p_down_last_frame = False
 clock = pg.time.Clock()
 window = pg.display.set_mode((900, 650))
 pg.display.set_caption('Joust')
@@ -50,11 +52,10 @@ eggs = pg.sprite.RenderUpdates()
 platforms = pg.sprite.RenderUpdates()
 god_sprite = pg.sprite.RenderUpdates()
 
-life_image = pg.image.load("resources/graphics/life.png").convert_alpha()
-
 
 class Sprites:
     sheet = "resources/graphics/spritesheet.png"
+    life = pg.image.load("resources/graphics/life.png").convert_alpha()
     p1mount = loader.load_image(58, 79, 12, 7, 3, sheet)
     ostrich = loader.load_sprite(347, 19, 16, 20, 3, 5, 8, sheet)
     buzzard = loader.load_sprite(191, 44, 20, 14, 3, 3, 7, sheet)
@@ -74,13 +75,13 @@ class Sprites:
     platforms = [p1, p2, p3, p4, p5, p6, p7, p8]
 
 
-player_bird = Player(Sprites)
+p1 = Player(Sprites)
 
 god = Godmode()
 god_sprite.add(Godmode())
 spawn_points = [[690, 270], [378, 500], [327, 141], [48, 300]]
 
-player.add(player_bird)
+player.add(p1)
 platforms.add(Sprites.platforms)
 pg.display.update()
 next_spawn_time = pg.time.get_ticks() + 2000
@@ -89,7 +90,7 @@ score = Score()
 
 
 async def main():
-    global clock, running, next_spawn_time, enemies_to_spawn, enemies, screen, clear_surface
+    global clock, running, next_spawn_time, enemies_to_spawn, enemies, screen, clear_surface, paused, p_down_last_frame
 
     while running:
         for event in pg.event.get():
@@ -118,16 +119,24 @@ async def main():
         if keys[pg.K_ESCAPE]:
             running = False
 
+        if keys[pg.K_p]:
+            if not p_down_last_frame:
+                paused = not paused
+            p_down_last_frame = True
+        else:
+            p_down_last_frame = False
+
         # check for God mode toggle
         if keys[pg.K_g]:
             god.toggle(current_time)
             if not god.on:
                 screen.fill((0, 0, 0))
 
-        player.update(current_time, keys, platforms, enemies, god, eggs, score)
-        platforms.update()
-        enemies.update(current_time, keys, platforms, enemies)
-        eggs.update(current_time, platforms)
+        if not paused:
+            player.update(current_time, keys, platforms, enemies, god, eggs, score)
+            platforms.update()
+            enemies.update(current_time, keys, platforms, enemies)
+            eggs.update(current_time, platforms)
 
         enemiesRects = enemies.draw(screen)
         playerRect = player.draw(screen)
@@ -135,7 +144,7 @@ async def main():
         lavaRect = draw_lava(screen)
         platRects = platforms.draw(screen)
 
-        draw_lives(player_bird.lives, screen, life_image)
+        draw_lives(p1.lives, screen, Sprites.life)
         score.draw(screen, Sprites.alpha)
 
         pg.display.update(playerRect)

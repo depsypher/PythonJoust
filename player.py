@@ -30,11 +30,11 @@ class Player(Character):
         self.next_accel_time = 0
 
     def build_mount(self, ostrich, mount):
-        surf = pg.Surface((60, 60))
+        surf = pg.Surface((60, 60), pg.SRCALPHA)
         surf.blit(mount, (18, 0))
         surf.blit(ostrich, (0, 0))
-        surf.set_colorkey(pg.color.Color('Black'))
         self.mask = pg.mask.from_surface(surf)
+#        return self.mask.to_surface(setcolor=(255, 0, 0))  # show mask for debugging
         return surf
 
     def update(self, current_time, keys, platforms, enemies, god, eggs, score):
@@ -99,7 +99,7 @@ class Player(Character):
                         self.x_speed += 3.0
                         # self.x_speed += 0.7 if self.x_speed < 2.5 else 1.3
 
-                self.y_speed -= 3
+                self.y_speed -= 3.5
                 self.playerChannel.stop()
                 self.flap_sound.play(0)
                 self.flap = True
@@ -180,6 +180,7 @@ class Player(Character):
 
         if not self.facing_right:
             self.image = pg.transform.flip(self.image, True, False)
+            self.mask = pg.mask.from_surface(self.image)
 
     def do_unmounted(self, current_time, platforms):
         # unmounted player, lone bird
@@ -196,9 +197,11 @@ class Player(Character):
                 self.flap = 3
         else:
             self.flap -= 1
+
         self.x = self.x + self.x_speed
         self.y = self.y + self.y_speed
         self.player_velocity()
+
         if self.x < -48:  # off the left. remove entirely
             self.image = self.unmounted_images[7]
             self.alive = "dead"
@@ -250,13 +253,13 @@ class Player(Character):
             # colliding from left side
             collided = True
             self.playerChannel.play(self.bump_sound)
-            self.x = self.x - 10
+            self.x = self.x - 3
             self.x_speed = -5
-        elif self.x > collider.rect.right - 50:
+        elif self.x > collider.rect.right + self.x_speed:
             # colliding from right side
             collided = True
             self.playerChannel.play(self.bump_sound)
-            self.x = self.x + 10
+            self.x = self.x + 3
             self.x_speed = 5
         elif self.y > collider.y:
             # colliding from bottom

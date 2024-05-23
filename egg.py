@@ -2,18 +2,17 @@ import pygame as pg
 
 
 class Egg(pg.sprite.Sprite):
-    def __init__(self, egg_images, x, y, xspeed, yspeed):
+    def __init__(self, egg_images, x, y, x_speed, y_speed):
         pg.sprite.Sprite.__init__(self)
         self.images = egg_images
         self.image = self.images[0]
+        self.mask = pg.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
-        self.x_speed = xspeed
-        self.y_speed = yspeed
+        self.x_speed = x_speed
+        self.y_speed = y_speed
         self.rect.topleft = (x, y)
-        self.right = self.rect.right
-        self.top = self.rect.top
         self.next_update_time = 0
 
     def update(self, current_time, platforms):
@@ -42,7 +41,7 @@ class Egg(pg.sprite.Sprite):
                 self.x < 0 or self.x > 860)):  # catch when it is rolling between screens
             self.y_speed = 0
         else:
-            collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
+            collided_platforms = pg.sprite.spritecollide(self, platforms, False, collided=pg.sprite.collide_mask)
             for collidedPlatform in collided_platforms:
                 self.bounce(collidedPlatform)
 
@@ -55,15 +54,15 @@ class Egg(pg.sprite.Sprite):
     def bounce(self, collider):
         if self.y < collider.y and ((collider.x - 40) < self.x < (collider.rect.right - 10)):
             # coming in from the top?
-            self.y_speed = 0
+            self.y_speed = -abs(self.y_speed) * 0.25
             self.y = collider.y - self.rect.height + 1
         elif self.x < collider.x:
             # colliding from left side
-            self.x = self.x - 10
+            self.x -= 3
             self.x_speed = -2
-        elif self.x > collider.rect.right - 50:
+        elif self.x > collider.rect.right + self.x_speed:
             # colliding from right side
-            self.x = self.x + 10
+            self.x += 3
             self.x_speed = 2
         elif self.y > collider.y:
             # colliding from bottom
