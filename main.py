@@ -72,7 +72,9 @@ class Sprites:
     p6 = Platform(loader.load_image(186, 0, 63, 8, 3, sheet), 0, 354)
     p7 = Platform(loader.load_image(319, 0, 46, 7, 3, sheet), 770, 354)
     p8 = Platform(loader.load_image(254, 0, 58, 11, 3, sheet), 606, 330)
-    platforms = [p1, p2, p3, p4, p5, p6, p7, p8]
+    p9 = Platform(None, -19, 550)
+    p10 = Platform(None, 723, 550)
+    platforms = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10]
 
 
 p1 = Player(Sprites)
@@ -99,7 +101,7 @@ async def main():
                 # sys.exit()
                 return
 
-        delta = clock.tick() * 0.001
+        delta = clock.tick(60) * 0.001
         current_time = pg.time.get_ticks()
 
         player.clear(screen, clear_surface)

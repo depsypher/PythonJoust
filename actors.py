@@ -1,13 +1,13 @@
-import pygame
+import pygame as pg
 
 
-class Character(pygame.sprite.Sprite):
+class Character(pg.sprite.Sprite):
     MAX_X_SPEED = 12
     MAX_RISING_SPEED = -10
     MAX_FALLING_SPEED = 14
 
     def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
+        pg.sprite.Sprite.__init__(self)
         self.x = 389
         self.y = 491
         self.x_speed = 0
@@ -54,11 +54,18 @@ class Character(pygame.sprite.Sprite):
                 self.frame = 5
 
 
-class Platform(pygame.sprite.Sprite):
+class Platform(pg.sprite.Sprite):
     def __init__(self, image, x, y):
-        pygame.sprite.Sprite.__init__(self)
-        self.image = image
-        self.mask = pygame.mask.from_surface(self.image)
+        pg.sprite.Sprite.__init__(self)
+        if image is not None:
+            self.image = image
+            self.mask = pg.mask.from_surface(self.image)
+        else:
+            surf = pg.Surface((185, 9), pg.SRCALPHA)
+            pg.draw.rect(surf, (141, 73, 23), pg.Rect(0, 0, 185, 9))
+            self.mask = pg.mask.from_surface(surf)
+            self.image = surf
+
         self.rect = self.image.get_rect()
         self.x = x
         self.y = y
@@ -96,15 +103,15 @@ class Score:
             xpos += 17
 
 
-class Godmode(pygame.sprite.Sprite):
+class Godmode(pg.sprite.Sprite):
     def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
-        self.pic = pygame.image.load("resources/graphics/god.png")
+        pg.sprite.Sprite.__init__(self)
+        self.pic = pg.image.load("resources/graphics/god.png")
         self.image = self.pic
         self.on = False
         self.rect = self.image.get_rect()
         self.rect.topleft = (850, 0)
-        self.timer = pygame.time.get_ticks()
+        self.timer = pg.time.get_ticks()
 
     def toggle(self, current_time):
         if current_time > self.timer:

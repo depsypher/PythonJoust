@@ -31,7 +31,7 @@ class Player(Character):
 
     def build_mount(self, ostrich, mount):
         surf = pg.Surface((60, 60), pg.SRCALPHA)
-        surf.blit(mount, (18, 0))
+        surf.blit(mount, (15, 0))
         surf.blit(ostrich, (0, 0))
         self.mask = pg.mask.from_surface(surf)
 #        return self.mask.to_surface(setcolor=(255, 0, 0))  # show mask for debugging
@@ -249,13 +249,13 @@ class Player(Character):
                 self.walking = True
                 self.y_speed = 0
                 self.y = collider.y - self.rect.height + 1
-        elif self.x < collider.x:
+        elif self.x < collider.x and self.x_speed >= 0:
             # colliding from left side
             collided = True
             self.playerChannel.play(self.bump_sound)
             self.x = self.x - 3
             self.x_speed = -5
-        elif self.x > collider.rect.right + self.x_speed:
+        elif self.x > collider.rect.right + self.x_speed and self.x_speed <= 0:
             # colliding from right side
             collided = True
             self.playerChannel.play(self.bump_sound)
