@@ -38,9 +38,9 @@ def draw_lives(lives, screen, life_image):
 
 
 running = True
-paused = True
+paused = False
 p_down_last_frame = False
-#clock = pg.time.Clock()
+clock = pg.time.Clock()
 window = pg.display.set_mode((900, 650))
 pg.display.set_caption('Joust')
 screen = pg.display.get_surface()
@@ -90,7 +90,7 @@ score = Score()
 
 
 async def main():
-    global running, next_spawn_time, enemies_to_spawn, enemies, screen, clear_surface, paused, p_down_last_frame
+    global clock, running, next_spawn_time, enemies_to_spawn, enemies, screen, clear_surface, paused, p_down_last_frame
 
     while running:
         for event in pg.event.get():
@@ -99,7 +99,7 @@ async def main():
                 # sys.exit()
                 return
 
-#        delta = clock.tick() * 0.001
+        delta = clock.tick() * 0.001
         current_time = pg.time.get_ticks()
 
         player.clear(screen, clear_surface)
@@ -156,14 +156,13 @@ async def main():
         if god.on:
             screen.fill((0, 0, 0))
             font = pg.font.SysFont(None, 24)
-            # img = font.render(f'FPS: {clock.get_fps():3.4f}', True, (0, 0, 255))
-            img = font.render(f'FPS: {60.0:3.4f}', True, (0, 0, 255))
+            img = font.render(f'FPS: {clock.get_fps():3.4f}', True, (0, 0, 255))
             screen.blit(img, (20, 20))
             pg.display.update(god_sprite.draw(screen))
         else:
             pg.display.update(pg.Rect(850, 0, 50, 50))
 
-    await asyncio.sleep(0)
+        await asyncio.sleep(0)
 
 
 asyncio.run(main())
