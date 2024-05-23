@@ -25,13 +25,7 @@ def generate_enemies(sprites, enemies, spawn_points, to_spawn):
 
 
 def draw_lava(screen):
-    lava_rect = [0, 600, 900, 50]
-    pg.draw.rect(screen, (255, 0, 0), lava_rect)
-    return lava_rect
-
-
-def draw_lava2(screen):
-    lava_rect = [0, 620, 900, 30]
+    lava_rect = [0, 620, 900, 80]
     pg.draw.rect(screen, (255, 0, 0), lava_rect)
     return lava_rect
 
@@ -58,15 +52,11 @@ god_sprite = pg.sprite.RenderUpdates()
 
 life_image = pg.image.load("resources/graphics/life.png").convert_alpha()
 
-image_sprites = {
-    "spawn":     loader.load_sliced_sprites(60, 60, "resources/graphics/spawn1.png"),
-    "bird":      loader.load_sliced_sprites(60, 60, "resources/graphics/playerMounted.png"),
-}
-
 
 class Sprites:
     sheet = "resources/graphics/spritesheet.png"
-    ostrich = loader.load_sprite(347, 19, 16, 20, 3, 6, 8, sheet)
+    p1mount = loader.load_image(58, 79, 12, 7, 3, sheet)
+    ostrich = loader.load_sprite(347, 19, 16, 20, 3, 5, 8, sheet)
     buzzard = loader.load_sprite(191, 44, 20, 14, 3, 3, 7, sheet)
     bounder = loader.load_sprite(58, 69, 12, 7, 3, 0, 1, sheet)
     hunter = loader.load_sprite(73, 69, 12, 7, 3, 0, 1, sheet)
@@ -76,7 +66,7 @@ class Sprites:
     p1 = Platform(pg.image.load("resources/graphics/plat1.png"), 166, 550)
     p2 = Platform(loader.load_image(370, 0, 64, 8, 3, sheet), 315, 420)
     p3 = Platform(loader.load_image(92, 0, 88, 9, 3, sheet), 250, 201)
-    p4 = Platform(loader.load_image(0, 0, 33, 7, 3, sheet), 0, 168)
+    p4 = Platform(loader.load_image(0, 0, 33, 7, 3, sheet), -10, 168)
     p5 = Platform(loader.load_image(39, 0, 47, 7, 3, sheet), 759, 168)
     p6 = Platform(loader.load_image(186, 0, 63, 8, 3, sheet), 0, 354)
     p7 = Platform(loader.load_image(319, 0, 46, 7, 3, sheet), 770, 354)
@@ -84,7 +74,7 @@ class Sprites:
     platforms = [p1, p2, p3, p4, p5, p6, p7, p8]
 
 
-player_bird = Player(image_sprites, Sprites)
+player_bird = Player(Sprites)
 
 god = Godmode()
 god_sprite.add(Godmode())
@@ -108,7 +98,7 @@ async def main():
                 # sys.exit()
                 return
 
-        delta = clock.tick() * 0.001
+        delta = clock.tick(60) * 0.001
         current_time = pg.time.get_ticks()
 
         player.clear(screen, clear_surface)
@@ -144,14 +134,12 @@ async def main():
         eggRects = eggs.draw(screen)
         lavaRect = draw_lava(screen)
         platRects = platforms.draw(screen)
-        lavarect2 = draw_lava2(screen)
 
         draw_lives(player_bird.lives, screen, life_image)
         score.draw(screen, Sprites.alpha)
 
         pg.display.update(playerRect)
         pg.display.update(lavaRect)
-        pg.display.update(lavarect2)
         pg.display.update(platRects)
         pg.display.update(enemiesRects)
         pg.display.update(eggRects)

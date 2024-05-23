@@ -19,6 +19,8 @@ https://depsypher.github.io/PythonJoust/
 - [ ] Add player 2?
 
 ### Reference material:
+* Arcade specs: https://seanriddle.com/willhard.html
+
 * Annotated assembly from the arcade:
 https://github.com/synamaxmusic/joust/blob/main/JOUSTRV4.ASM
 

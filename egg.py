@@ -1,9 +1,9 @@
-import pygame
+import pygame as pg
 
 
-class Egg(pygame.sprite.Sprite):
+class Egg(pg.sprite.Sprite):
     def __init__(self, egg_images, x, y, xspeed, yspeed):
-        pygame.sprite.Sprite.__init__(self)
+        pg.sprite.Sprite.__init__(self)
         self.images = egg_images
         self.image = self.images[0]
         self.rect = self.image.get_rect()
@@ -15,10 +15,13 @@ class Egg(pygame.sprite.Sprite):
         self.right = self.rect.right
         self.top = self.rect.top
         self.next_update_time = 0
-        self.walking = False
 
-    def move(self):
-        # gravity
+    def update(self, current_time, platforms):
+        if current_time < self.next_update_time:
+            return
+
+        self.next_update_time = current_time + 30
+
         self.y_speed += 0.4
         if self.y_speed > 10:
             self.y_speed = 10
@@ -34,22 +37,15 @@ class Egg(pygame.sprite.Sprite):
         if self.y > 570:  # hit lava
             self.kill()
 
-    def update(self, current_time, platforms):
-        if current_time < self.next_update_time:
-            return
-
-        self.next_update_time = current_time + 30
-        self.move()
         self.rect.topleft = (self.x, self.y)
-        collided_platforms = pygame.sprite.spritecollide(
-            self, platforms, False, collided=pygame.sprite.collide_mask
-        )
         if (((40 < self.y < 45) or (250 < self.y < 255)) and (
                 self.x < 0 or self.x > 860)):  # catch when it is rolling between screens
             self.y_speed = 0
         else:
+            collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
             for collidedPlatform in collided_platforms:
                 self.bounce(collidedPlatform)
+
         # wrap round screens
         if self.x < -48:
             self.x = 900
@@ -57,9 +53,8 @@ class Egg(pygame.sprite.Sprite):
             self.x = -48
 
     def bounce(self, collider):
-        if self.y < (collider.y - 20) and ((collider.x - 40) < self.x < (collider.rect.right - 10)):
+        if self.y < collider.y and ((collider.x - 40) < self.x < (collider.rect.right - 10)):
             # coming in from the top?
-            self.walking = True
             self.y_speed = 0
             self.y = collider.y - self.rect.height + 1
         elif self.x < collider.x:

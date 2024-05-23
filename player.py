@@ -1,32 +1,41 @@
 import random
 
-import pygame
+import pygame as pg
 
 from enemy import Enemy
 from actors import Character
 
 
 class Player(Character):
-    def __init__(self, images, sprites):
+    def __init__(self, sprites):
         super().__init__()
         self.frame = 2
-        self.mounted_images = images["bird"]
         self.unmounted_images = sprites.ostrich
-        self.spawn_images = images["spawn"]
+        self.mount = sprites.p1mount
+        self.spawn_images = sprites.spawn
         self.egg_images = sprites.egg
-        self.flap_sound = pygame.mixer.Sound("resources/sound/joustflaedit.ogg")
-        self.skid_sound = pygame.mixer.Sound("resources/sound/joustski.ogg")
-        self.bump_sound = pygame.mixer.Sound("resources/sound/joustthu.ogg")
-        self.egg_sound = pygame.mixer.Sound("resources/sound/joustegg.ogg")
-        self.image = self.mounted_images[self.frame]
+        self.flap_sound = pg.mixer.Sound("resources/sound/joustflaedit.ogg")
+        self.skid_sound = pg.mixer.Sound("resources/sound/joustski.ogg")
+        self.bump_sound = pg.mixer.Sound("resources/sound/joustthu.ogg")
+        self.egg_sound = pg.mixer.Sound("resources/sound/joustegg.ogg")
+        self.image = self.spawn_images[0]
+        self.mask = pg.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.flap = False
-        self.playerChannel = pygame.mixer.Channel(0)
+        self.playerChannel = pg.mixer.Channel(0)
         self.lives = 5
         self.alive = "spawning"
         self.skidding = 0
         self.spawning = 20
         self.next_accel_time = 0
+
+    def build_mount(self, ostrich, mount):
+        surf = pg.Surface((60, 60))
+        surf.blit(mount, (18, 0))
+        surf.blit(ostrich, (0, 0))
+        surf.set_colorkey(pg.color.Color('Black'))
+        self.mask = pg.mask.from_surface(surf)
+        return surf
 
     def update(self, current_time, keys, platforms, enemies, god, eggs, score):
         if current_time < self.next_update_time:
@@ -44,7 +53,7 @@ class Player(Character):
             self.spawning -= 1
             self.frame = 5 if self.frame == 6 else self.frame + 1
             self.image = self.spawn_images[self.frame]
-            if self.frame >= 5 and (keys[pygame.K_LEFT] or keys[pygame.K_RIGHT] or keys[pygame.K_SPACE]):
+            if self.frame >= 5 and (keys[pg.K_LEFT] or keys[pg.K_RIGHT] or keys[pg.K_SPACE]):
                 self.spawning = 0
                 self.alive = "mounted"
                 self.do_mounted(current_time, eggs, enemies, god, keys, platforms, score)
@@ -60,30 +69,30 @@ class Player(Character):
             if self.skidding == 1:
                 self.x_speed = 0
             self.skidding -= 1
-        elif keys[pygame.K_LEFT]:
+        elif keys[pg.K_LEFT]:
             self.facing_right = False
             if self.walking and current_time > self.next_accel_time:
                 self.next_accel_time = current_time + 30 * 10
                 self.x_speed -= 1.5#0.1 if self.x_speed > -3.0 else 0.8
-        elif keys[pygame.K_RIGHT]:
+        elif keys[pg.K_RIGHT]:
             self.facing_right = True
             if self.walking and current_time > self.next_accel_time:
                 self.next_accel_time = current_time + 30 * 10
                 self.x_speed += 1.5#0.1 if self.x_speed < 3.0 else 0.8
 
-        if keys[pygame.K_SPACE]:
+        if keys[pg.K_SPACE]:
             self.skidding = 0
             self.walking = False
 
             if not self.flap:
-                if keys[pygame.K_LEFT]:
+                if keys[pg.K_LEFT]:
                     if self.x_speed > -1.5:
                         self.x_speed -= 1.5
                     else:
                         self.x_speed -= 3.0
                     # self.x_speed -= 0.7 if self.x_speed > -2.5 else 1.3
 
-                if keys[pygame.K_RIGHT]:
+                if keys[pg.K_RIGHT]:
                     if self.x_speed < 1.5:
                         self.x_speed += 1.5
                     else:
@@ -111,7 +120,7 @@ class Player(Character):
         self.rect.topleft = (self.x, self.y)
 
         # check for enemy collision
-        for bird in pygame.sprite.spritecollide(self, enemies, False, pygame.sprite.collide_mask):
+        for bird in pg.sprite.spritecollide(self, enemies, False, pg.sprite.collide_mask):
             # check each bird to see if above or below
             if bird.y > self.y and bird.alive:
                 bird.killed(eggs, self.egg_images, self)
@@ -129,8 +138,7 @@ class Player(Character):
                 bird.bounce(self)
 
         collided = False
-        collided_platforms = pygame.sprite.spritecollide(
-            self, platforms, False, pygame.sprite.collide_mask)
+        collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
 
         for collidedPlatform in collided_platforms:
             collided = self.bounce(collidedPlatform)
@@ -138,7 +146,7 @@ class Player(Character):
         if not collided:
             self.walking = False
 
-        collided_eggs = pygame.sprite.spritecollide(self, eggs, False, pygame.sprite.collide_mask)
+        collided_eggs = pg.sprite.spritecollide(self, eggs, False, pg.sprite.collide_mask)
         for collided_egg in collided_eggs:
             self.egg_sound.play(0)
             score.collect_egg()
@@ -150,8 +158,8 @@ class Player(Character):
                 if self.x_speed != 0:
                     if self.skidding > 0:
                         self.frame = 4
-                    elif (self.x_speed > 6 and keys[pygame.K_LEFT]) or (
-                            self.x_speed < -6 and keys[pygame.K_RIGHT]):
+                    elif (self.x_speed > 6 and keys[pg.K_LEFT]) or (
+                            self.x_speed < -6 and keys[pg.K_RIGHT]):
                         self.playerChannel.play(self.skid_sound)
                         self.facing_right = True if self.x_speed > 0 else False
                         self.frame = 4
@@ -166,12 +174,12 @@ class Player(Character):
                     self.frame = 3
                     self.playerChannel.stop()
 
-            self.image = self.mounted_images[self.frame]
+            self.image = self.build_mount(self.unmounted_images[self.frame], self.mount)
         else:
-            self.image = self.mounted_images[6 if self.flap else 5]
+            self.image = self.build_mount(self.unmounted_images[6 if self.flap else 5], self.mount)
 
         if not self.facing_right:
-            self.image = pygame.transform.flip(self.image, True, False)
+            self.image = pg.transform.flip(self.image, True, False)
 
     def do_unmounted(self, current_time, platforms):
         # unmounted player, lone bird
@@ -203,8 +211,7 @@ class Player(Character):
 
         # check for platform collision
         collided = False
-        collided_platforms = pygame.sprite.spritecollide(
-            self, platforms, False, collided=pygame.sprite.collide_mask)
+        collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
 
         for collidedPlatform in collided_platforms:
             collided = self.bounce(collidedPlatform)
@@ -216,7 +223,7 @@ class Player(Character):
         self.animate(current_time)
         self.image = self.unmounted_images[self.frame]
         if self.x_speed < 0 or (self.x_speed == 0 and not self.facing_right):
-            self.image = pygame.transform.flip(self.image, True, False)
+            self.image = pg.transform.flip(self.image, True, False)
             self.facing_right = False
         else:
             self.facing_right = True
@@ -268,7 +275,6 @@ class Player(Character):
 
     def respawn(self):
         self.frame = 1
-        self.image = self.mounted_images[self.frame]
         self.rect = self.image.get_rect()
         self.x = 389
         self.y = 491
