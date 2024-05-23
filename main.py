@@ -99,7 +99,7 @@ async def main():
                 # sys.exit()
                 return
 
-        delta = clock.tick(60) * 0.001
+        delta = clock.tick() * 0.001
         current_time = pg.time.get_ticks()
 
         player.clear(screen, clear_surface)
