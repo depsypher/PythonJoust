@@ -38,7 +38,7 @@ def draw_lives(lives, screen, life_image):
 
 
 running = True
-paused = False
+paused = True
 p_down_last_frame = False
 #clock = pg.time.Clock()
 window = pg.display.set_mode((900, 650))
