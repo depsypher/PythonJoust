@@ -21,7 +21,7 @@ class Player(Character):
         self.image = self.spawn_images[0]
         self.mask = pg.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
-        self.flap = False
+        self.flap = 0
         self.playerChannel = pg.mixer.Channel(0)
         self.lives = 5
         self.alive = "spawning"
@@ -29,20 +29,26 @@ class Player(Character):
         self.spawning = 20
         self.next_accel_time = 0
 
-    def build_mount(self, ostrich, mount):
+    def build_mount(self, mount):
+        if self.flap == 1:
+            frame = 5
+        elif self.flap == 2 or (self.flap == 0 and not self.walking):
+            frame = 6
+        else:
+            frame = self.frame
+        ostrich = self.unmounted_images[frame]
         surf = pg.Surface((60, 60), pg.SRCALPHA)
-        surf.blit(mount, (15, 0))
+        surf.blit(mount, (15, 6 if self.skidding else 0))
         surf.blit(ostrich, (0, 0))
         self.mask = pg.mask.from_surface(surf)
 #        return self.mask.to_surface(setcolor=(255, 0, 0))  # show mask for debugging
         return surf
 
-    def update(self, current_time, keys, platforms, enemies, god, eggs, score):
+    def update(self, current_time, keys, platforms, enemies, god, eggs, score, state):
         if current_time < self.next_update_time:
             return
 
-        # Update every 30 milliseconds
-        self.next_update_time = current_time + 30
+        self.next_update_time = current_time + 17
 
         if self.spawning == 0:
             self.alive = "mounted"
@@ -56,55 +62,61 @@ class Player(Character):
             if self.frame >= 5 and (keys[pg.K_LEFT] or keys[pg.K_RIGHT] or keys[pg.K_SPACE]):
                 self.spawning = 0
                 self.alive = "mounted"
-                self.do_mounted(current_time, eggs, enemies, god, keys, platforms, score)
+                self.do_mounted(current_time, eggs, enemies, god, keys, platforms, score, state)
         elif self.alive == "mounted" or self.alive == "skidding":
-            self.do_mounted(current_time, eggs, enemies, god, keys, platforms, score)
+            self.do_mounted(current_time, eggs, enemies, god, keys, platforms, score, state)
         elif self.alive == "unmounted":
             self.do_unmounted(current_time, platforms)
         else:
             self.respawn()
 
-    def do_mounted(self, current_time, eggs, enemies, god, keys, platforms, score):
+    def do_mounted(self, current_time, eggs, enemies, god, keys, platforms, score, state):
         if self.skidding > 0:
             if self.skidding == 1:
                 self.x_speed = 0
             self.skidding -= 1
+        elif self.walking and ((self.x_speed > 6 and keys[pg.K_LEFT]) or (self.x_speed < -6 and keys[pg.K_RIGHT])):
+            self.playerChannel.play(self.skid_sound)
+            self.frame = 4
+            self.skidding = 25
         elif keys[pg.K_LEFT]:
-            self.facing_right = False
-            if self.walking and current_time > self.next_accel_time:
-                self.next_accel_time = current_time + 30 * 10
-                self.x_speed -= 1.5#0.1 if self.x_speed > -3.0 else 0.8
+            if self.walking:
+                if current_time > self.next_accel_time:
+                    self.x_speed -= 1
+                    if self.x_speed != 0:
+                        self.facing_right = self.x_speed > 0
+            else:
+                self.facing_right = False
         elif keys[pg.K_RIGHT]:
-            self.facing_right = True
-            if self.walking and current_time > self.next_accel_time:
-                self.next_accel_time = current_time + 30 * 10
-                self.x_speed += 1.5#0.1 if self.x_speed < 3.0 else 0.8
+            if self.walking:
+                if current_time > self.next_accel_time:
+                    self.x_speed += 1
+                    if self.x_speed != 0:
+                        self.facing_right = self.x_speed > 0
+            else:
+                self.facing_right = True
 
         if keys[pg.K_SPACE]:
             self.skidding = 0
             self.walking = False
 
-            if not self.flap:
+            if self.flap == 0:
                 if keys[pg.K_LEFT]:
-                    if self.x_speed > -1.5:
-                        self.x_speed -= 1.5
-                    else:
-                        self.x_speed -= 3.0
-                    # self.x_speed -= 0.7 if self.x_speed > -2.5 else 1.3
-
+                    self.x_speed -= 1
                 if keys[pg.K_RIGHT]:
-                    if self.x_speed < 1.5:
-                        self.x_speed += 1.5
-                    else:
-                        self.x_speed += 3.0
-                        # self.x_speed += 0.7 if self.x_speed < 2.5 else 1.3
+                    self.x_speed += 1
 
-                self.y_speed -= 3.5
+                self.y_speed -= 2.5
                 self.playerChannel.stop()
                 self.flap_sound.play(0)
-                self.flap = True
+                self.flap = 2
+            else:
+                self.flap = 1
         else:
-            self.flap = False
+            self.flap = 0
+
+        if current_time > self.next_accel_time:
+            self.next_accel_time = current_time + 200
 
         self.player_velocity()
 
@@ -127,6 +139,7 @@ class Player(Character):
                 self.bounce(bird)
                 bird.bounce(self)
                 score.score += 1000
+                # state['paused'] = True
             elif bird.y < self.y - 5 and bird.alive and not god.on:
                 self.bounce(bird)
                 bird.bounce(self)
@@ -137,14 +150,19 @@ class Player(Character):
                 self.bounce(bird)
                 bird.bounce(self)
 
-        collided = False
-        collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
+        # catch when it is walking between screens
+        if (self.y == 109 or self.y == 295 or self.y == 491) and (self.x < 0 or self.x > 840):
+            self.walking = True
+            self.y_speed = 0
+        else:
+            collided = False
+            collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
 
-        for collidedPlatform in collided_platforms:
-            collided = self.bounce(collidedPlatform)
+            for collidedPlatform in collided_platforms:
+                collided = self.bounce(collidedPlatform)
 
-        if not collided:
-            self.walking = False
+            if not collided:
+                self.walking = False
 
         collided_eggs = pg.sprite.spritecollide(self, eggs, False, pg.sprite.collide_mask)
         for collided_egg in collided_eggs:
@@ -154,18 +172,12 @@ class Player(Character):
 
         self.rect.topleft = (self.x, self.y)
         if self.walking:
-            if self.next_anim_time < current_time:
+            if current_time > self.next_anim_time:
                 if self.x_speed != 0:
                     if self.skidding > 0:
                         self.frame = 4
-                    elif (self.x_speed > 6 and keys[pg.K_LEFT]) or (
-                            self.x_speed < -6 and keys[pg.K_RIGHT]):
-                        self.playerChannel.play(self.skid_sound)
-                        self.facing_right = True if self.x_speed > 0 else False
-                        self.frame = 4
-                        self.skidding = 13
                     else:
-                        ms = (8.0 / abs(self.x_speed)) * 45
+                        ms = (8.0 / abs(self.x_speed)) * 25
                         self.next_anim_time = current_time + ms
                         self.frame += 1
                         if self.frame > 3:
@@ -174,9 +186,7 @@ class Player(Character):
                     self.frame = 3
                     self.playerChannel.stop()
 
-            self.image = self.build_mount(self.unmounted_images[self.frame], self.mount)
-        else:
-            self.image = self.build_mount(self.unmounted_images[6 if self.flap else 5], self.mount)
+        self.image = self.build_mount(self.mount)
 
         if not self.facing_right:
             self.image = pg.transform.flip(self.image, True, False)
@@ -238,24 +248,25 @@ class Player(Character):
             self.x -= self.x_speed * 2
             self.x_speed = -self.x_speed
             self.playerChannel.play(self.bump_sound)
-        elif self.y < (collider.y - 20) and ((collider.x - 40) < self.x < (collider.rect.right - 10)):
+        elif self.rect.center[1] < collider.rect.center[1]:
             # coming in from the top?
             if enemy:
                 self.y_speed = max(-self.y_speed, -6)
-                self.y = collider.y - self.rect.height - 1
+                self.y = collider.y - 25
                 self.playerChannel.play(self.bump_sound)
             else:
                 collided = True
                 self.walking = True
+                self.flap = 0
                 self.y_speed = 0
                 self.y = collider.y - self.rect.height + 1
-        elif self.x < collider.x and self.x_speed >= 0:
+        elif self.rect.right < collider.x and self.x_speed >= 0:
             # colliding from left side
             collided = True
             self.playerChannel.play(self.bump_sound)
             self.x = self.x - 3
             self.x_speed = -5
-        elif self.x > collider.rect.right + self.x_speed and self.x_speed <= 0:
+        elif collider.rect.right < self.x + abs(self.x_speed) and self.x_speed <= 0:
             # colliding from right side
             collided = True
             self.playerChannel.play(self.bump_sound)
@@ -284,7 +295,7 @@ class Player(Character):
         self.facing_right = True
         self.x_speed = 0
         self.y_speed = 0
-        self.flap = False
+        self.flap = 0
         self.walking = True
         self.skidding = False
         self.alive = "spawning"

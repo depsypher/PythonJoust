@@ -39,7 +39,7 @@ class Enemy(Character):
     def killed(self, eggs, egg_images, killer):
         egg_x_speed = self.x_speed + killer.x_speed
         egg_y_speed = self.y_speed + killer.y_speed - 1
-        eggs.add(Egg(egg_images, self.x + 15, self.y + 20, egg_x_speed, egg_y_speed))
+        eggs.add(Egg(egg_images, self.x + 27, self.y + 21, egg_x_speed, egg_y_speed))
         self.alive = False
 
     def update(self, current_time, keys, platforms, enemies):
@@ -107,8 +107,9 @@ class Enemy(Character):
 
             # check for platform collision
             self.walking = False
-            if ((40 < self.y < 45) or (220 < self.y < 225)) and (
-                    self.x < 0 or self.x > 860):  # catch when it is walking between screens
+
+            # catch when it is walking between screens
+            if (self.y == 109 or self.y == 295 or self.y == 491) and (self.x < 0 or self.x > 840):
                 self.walking = True
                 self.y_speed = 0
             else:
@@ -121,7 +122,7 @@ class Enemy(Character):
             self.animate(current_time)
 
     def bounce(self, collider):
-        if self.y < (collider.y - 20) and ((collider.x - 40) < self.x < (collider.rect.right - 10)):
+        if self.rect.center[1] < collider.rect.center[1]:
             # coming in from the top?
             self.walking = True
             self.y_speed = 0
@@ -134,7 +135,7 @@ class Enemy(Character):
             # colliding from right side
             self.x += 3
             self.x_speed = 2
-        elif self.y > collider.y:
+        elif self.y > collider.rect.center[1]:
             # colliding from bottom
             self.y += 3
             self.y_speed = 1

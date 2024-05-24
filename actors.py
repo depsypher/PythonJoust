@@ -1,10 +1,9 @@
 import pygame as pg
 
-
 class Character(pg.sprite.Sprite):
-    MAX_X_SPEED = 12
-    MAX_RISING_SPEED = -10
-    MAX_FALLING_SPEED = 14
+    MAX_X_SPEED = 8
+    MAX_RISING_SPEED = -6
+    MAX_FALLING_SPEED = 10
 
     def __init__(self):
         pg.sprite.Sprite.__init__(self)
@@ -26,7 +25,7 @@ class Character(pg.sprite.Sprite):
         self.y += self.y_speed
 
         if not self.walking:
-            self.y_speed += 0.4
+            self.y_speed += 0.2
 
         self.x_speed = max(self.x_speed, -self.MAX_X_SPEED)
         self.x_speed = min(self.x_speed, self.MAX_X_SPEED)

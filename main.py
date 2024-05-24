@@ -37,9 +37,12 @@ def draw_lives(lives, screen, life_image):
         screen.blit(life_image, [x, 570])
 
 
-running = True
-paused = False
-p_down_last_frame = False
+state = {
+    'running': True,
+    'paused':  False,
+    'p_down_last_frame': False
+}
+
 clock = pg.time.Clock()
 window = pg.display.set_mode((900, 650))
 pg.display.set_caption('Joust')
@@ -92,9 +95,9 @@ score = Score()
 
 
 async def main():
-    global clock, running, next_spawn_time, enemies_to_spawn, enemies, screen, clear_surface, paused, p_down_last_frame
+    global clock, state, next_spawn_time, enemies_to_spawn, enemies, screen, clear_surface
 
-    while running:
+    while state['running']:
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 pg.quit()
@@ -119,14 +122,14 @@ async def main():
 
         # If they have pressed Escape, close down Pygame
         if keys[pg.K_ESCAPE]:
-            running = False
+            state['running'] = False
 
         if keys[pg.K_p]:
-            if not p_down_last_frame:
-                paused = not paused
-            p_down_last_frame = True
+            if not state['p_down_last_frame']:
+                state['paused'] = not state['paused']
+            state['p_down_last_frame'] = True
         else:
-            p_down_last_frame = False
+            state['p_down_last_frame'] = False
 
         # check for God mode toggle
         if keys[pg.K_g]:
@@ -134,8 +137,8 @@ async def main():
             if not god.on:
                 screen.fill((0, 0, 0))
 
-        if not paused:
-            player.update(current_time, keys, platforms, enemies, god, eggs, score)
+        if not state['paused']:
+            player.update(current_time, keys, platforms, enemies, god, eggs, score, state)
             platforms.update()
             enemies.update(current_time, keys, platforms, enemies)
             eggs.update(current_time, platforms)
