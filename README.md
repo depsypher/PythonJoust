@@ -9,7 +9,7 @@ I made it playable online using pygbag for wasm conversion:
 https://depsypher.github.io/PythonJoust/
 
 ### Roadmap:
-- [ ] First stage needs bottom platform
+- [x] First stage needs bottom platform
 - [ ] Add multiple stages with transitions between them
 - [ ] Show scoring when killing enemies, collecting eggs
 - [ ] Add lava troll
@@ -22,6 +22,7 @@ https://depsypher.github.io/PythonJoust/
 * Arcade specs: https://seanriddle.com/willhard.html
 
 * Annotated assembly from the arcade:
+https://github.com/historicalsource/joust
 https://github.com/synamaxmusic/joust/blob/main/JOUSTRV4.ASM
 
 

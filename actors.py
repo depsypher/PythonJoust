@@ -1,9 +1,20 @@
 import pygame as pg
+import math
+
 
 class Character(pg.sprite.Sprite):
-    MAX_X_SPEED = 8
+    MAX_X_SPEED = 4
     MAX_RISING_SPEED = -6
     MAX_FALLING_SPEED = 10
+    GRAVITY = 0.2
+
+    VEL = {
+        0: 0.8,
+        1: 0.8,
+        2: 0.8,
+        3: 1.0,
+        4: 1.8
+    }
 
     def __init__(self):
         pg.sprite.Sprite.__init__(self)
@@ -15,22 +26,22 @@ class Character(pg.sprite.Sprite):
         self.frame = 0
         self.next_update_time = 0
         self.next_anim_time = 0
-        self.targetXSpeed = 10
+        self.targetXSpeed = 8
         self.walking = True
         self.facing_right = True
         self.spawning = True
 
-    def player_velocity(self):
-        self.x += self.x_speed
-        self.y += self.y_speed
-
+    def velocity(self):
         if not self.walking:
-            self.y_speed += 0.2
+            self.y_speed += self.GRAVITY
 
         self.x_speed = max(self.x_speed, -self.MAX_X_SPEED)
         self.x_speed = min(self.x_speed, self.MAX_X_SPEED)
         self.y_speed = max(self.y_speed, self.MAX_RISING_SPEED)
         self.y_speed = min(self.y_speed, self.MAX_FALLING_SPEED)
+
+        self.x += (self.x_speed * self.VEL[abs(math.floor(self.x_speed))])
+        self.y += (self.y_speed * .6)
 
         if self.y < 0:  # can't go off the top
             self.y = 0
@@ -82,6 +93,14 @@ class Score:
         self.score += points
         self.eggs_collected += 1
         return points
+
+    def kill(self, enemy):
+        if enemy.enemyType == 1:
+            self.score += 500
+        elif enemy.enemyType == 2:
+            self.score += 750
+        elif enemy.enemyType == 3:
+            self.score += 1000
 
     def die(self):
         self.score += 50

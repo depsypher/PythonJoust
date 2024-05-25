@@ -36,10 +36,11 @@ class Enemy(Character):
         self.mask = pg.mask.from_surface(surf)
         return surf
 
-    def killed(self, eggs, egg_images, killer):
-        egg_x_speed = self.x_speed + killer.x_speed
-        egg_y_speed = self.y_speed + killer.y_speed - 1
-        eggs.add(Egg(egg_images, self.x + 27, self.y + 21, egg_x_speed, egg_y_speed))
+    def killed(self, eggs, egg_images, killer, add_sprite, score):
+        egg_x_speed = (self.x_speed + killer.x_speed) * 0.5
+        egg_y_speed = (self.y_speed + killer.y_speed - 1) * 0.5
+        add_sprite(eggs, Egg(egg_images, self.x + 27, self.y + 21, egg_x_speed, egg_y_speed))
+        score.kill(self)
         self.alive = False
 
     def update(self, current_time, keys, platforms, enemies):
@@ -65,13 +66,13 @@ class Enemy(Character):
 
             # work out if flapping...
             if self.flap < 1:
-                if random.randint(0, 10) > 8 or self.y > 450:  # flap to avoid lava
+                if random.randint(0, 10) > 9 or self.y > 450:  # flap to avoid lava
                     self.y_speed -= 3
                     self.flap = 3
             else:
                 self.flap -= 1
 
-            self.player_velocity()
+            self.velocity()
 
             if self.y > 570:  # hit lava
                 self.kill()
@@ -122,20 +123,22 @@ class Enemy(Character):
             self.animate(current_time)
 
     def bounce(self, collider):
-        if self.rect.center[1] < collider.rect.center[1]:
+        if collider.rect.left < self.rect.centerx < collider.rect.right and (
+                collider.rect.centery > self.rect.centery):
             # coming in from the top?
             self.walking = True
             self.y_speed = 0
             self.y = collider.y - self.rect.height + 3
-        elif self.x < collider.x:
-            # colliding from left side
-            self.x -= 3
-            self.x_speed = -2
-        elif self.x > collider.rect.right + self.x_speed:
-            # colliding from right side
-            self.x += 3
-            self.x_speed = 2
-        elif self.y > collider.rect.center[1]:
+        elif self.y - self.y_speed > collider.rect.top and (
+                collider.rect.left < self.rect.centerx < collider.rect.right):
             # colliding from bottom
             self.y += 3
             self.y_speed = 1
+        elif self.rect.centerx < collider.rect.centerx:
+            # colliding from left side
+            self.x -= 3
+            self.x_speed = -2
+        elif self.rect.centerx > collider.rect.centerx:
+            # colliding from right side
+            self.x += 3
+            self.x_speed = 2

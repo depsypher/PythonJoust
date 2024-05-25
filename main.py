@@ -18,10 +18,10 @@ def generate_enemies(sprites, enemies, spawn_points, to_spawn):
     random.shuffle(chosen)
     for count in range(1):
         enemy_type = random.randint(0, 1)
-        enemies.add(Enemy(sprites, chosen[count], enemy_type))
+        add_sprite(enemies, Enemy(sprites, chosen[count], enemy_type))
         to_spawn -= 1
 
-    return enemies, to_spawn
+    return to_spawn
 
 
 def draw_lava(screen):
@@ -37,30 +37,25 @@ def draw_lives(lives, screen, life_image):
         screen.blit(life_image, [x, 570])
 
 
+def add_sprite(group, sprite):
+    group.add(sprite)
+    all_sprites.add(sprite)
+
+
 state = {
     'running': True,
     'paused':  False,
     'p_down_last_frame': False
 }
 
-clock = pg.time.Clock()
 window = pg.display.set_mode((900, 650))
-pg.display.set_caption('Joust')
-screen = pg.display.get_surface()
-clear_surface = screen.copy()
-
-player = pg.sprite.RenderUpdates()
-enemies = pg.sprite.RenderUpdates()
-eggs = pg.sprite.RenderUpdates()
-platforms = pg.sprite.RenderUpdates()
-god_sprite = pg.sprite.RenderUpdates()
 
 
 class Sprites:
     sheet = "resources/graphics/spritesheet.png"
     life = pg.image.load("resources/graphics/life.png").convert_alpha()
     p1mount = loader.load_image(58, 79, 12, 7, 3, sheet)
-    ostrich = loader.load_sprite(347, 19, 16, 20, 3, 5, 8, sheet)
+    ostrich = loader.load_sprite(348, 19, 16, 20, 3, 5, 8, sheet)
     buzzard = loader.load_sprite(191, 44, 20, 14, 3, 3, 7, sheet)
     bounder = loader.load_sprite(58, 69, 12, 7, 3, 0, 1, sheet)
     hunter = loader.load_sprite(73, 69, 12, 7, 3, 0, 1, sheet)
@@ -80,18 +75,27 @@ class Sprites:
     platforms = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10]
 
 
-p1 = Player(Sprites)
-
 god = Godmode()
-god_sprite.add(Godmode())
 spawn_points = [[690, 270], [378, 500], [327, 141], [48, 300]]
 
-player.add(p1)
-platforms.add(Sprites.platforms)
-pg.display.update()
+player = pg.sprite.RenderUpdates()
+enemies = pg.sprite.RenderUpdates()
+eggs = pg.sprite.RenderUpdates()
+platforms = pg.sprite.RenderUpdates()
+god_sprite = pg.sprite.RenderUpdates()
+all_sprites = pg.sprite.RenderUpdates()
+
+p1 = Player(Sprites, add_sprite, state)
+add_sprite(player, p1)
+add_sprite(platforms, Sprites.platforms)
 next_spawn_time = pg.time.get_ticks() + 2000
 enemies_to_spawn = 6  # test. make 6 enemies to start
 score = Score()
+
+clock = pg.time.Clock()
+pg.display.set_caption('Joust')
+screen = pg.display.get_surface()
+clear_surface = screen.copy()
 
 
 async def main():
@@ -107,14 +111,11 @@ async def main():
         delta = clock.tick(60) * 0.001
         current_time = pg.time.get_ticks()
 
-        player.clear(screen, clear_surface)
-        enemies.clear(screen, clear_surface)
-        eggs.clear(screen, clear_surface)
-        god_sprite.clear(screen, clear_surface)
+        all_sprites.clear(screen, clear_surface)
 
         # make enemies
         if current_time > next_spawn_time and enemies_to_spawn > 0:
-            enemies, enemies_to_spawn = generate_enemies(Sprites, enemies, spawn_points, enemies_to_spawn)
+            enemies_to_spawn = generate_enemies(Sprites, enemies, spawn_points, enemies_to_spawn)
             next_spawn_time = current_time + 2000
 
         keys = pg.key.get_pressed()
@@ -135,7 +136,7 @@ async def main():
         if keys[pg.K_g]:
             god.toggle(current_time)
             if not god.on:
-                screen.fill((0, 0, 0))
+                screen.blit(clear_surface, (20, 20), (0, 0, 200, 20))
 
         if not state['paused']:
             player.update(current_time, keys, platforms, enemies, god, eggs, score, state)
@@ -143,29 +144,25 @@ async def main():
             enemies.update(current_time, keys, platforms, enemies)
             eggs.update(current_time, platforms)
 
-        enemiesRects = enemies.draw(screen)
-        playerRect = player.draw(screen)
-        eggRects = eggs.draw(screen)
+        if god.on:
+            font = pg.font.SysFont(None, 24)
+            img = font.render(f'FPS: {clock.get_fps():3.4f}\nx_speed: {p1.x_speed}', True, (0, 0, 255))
+            rect = img.get_rect().copy()
+            rect.width += 10
+            screen.blit(clear_surface, (20, 20), rect)
+            screen.blit(img, (20, 20))
+            add_sprite(god_sprite, god)
+        else:
+            all_sprites.remove(god_sprite)
+
         lavaRect = draw_lava(screen)
-        platRects = platforms.draw(screen)
+        sprite_rects = all_sprites.draw(screen)
 
         draw_lives(p1.lives, screen, Sprites.life)
         score.draw(screen, Sprites.alpha)
 
-        pg.display.update(playerRect)
         pg.display.update(lavaRect)
-        pg.display.update(platRects)
-        pg.display.update(enemiesRects)
-        pg.display.update(eggRects)
-
-        if god.on:
-            screen.fill((0, 0, 0))
-            font = pg.font.SysFont(None, 24)
-            img = font.render(f'FPS: {clock.get_fps():3.4f}', True, (0, 0, 255))
-            screen.blit(img, (20, 20))
-            pg.display.update(god_sprite.draw(screen))
-        else:
-            pg.display.update(pg.Rect(850, 0, 50, 50))
+        pg.display.update(sprite_rects)
 
         await asyncio.sleep(0)
 
