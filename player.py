@@ -14,6 +14,7 @@ class Player(Character):
         self.mount = sprites.p1mount
         self.spawn_images = sprites.spawn
         self.egg_images = sprites.egg
+        self.poof_images = sprites.poof
         self.sounds = {
             "walk1": pg.mixer.Sound("resources/sound/walk1.ogg"),
             "walk2": pg.mixer.Sound("resources/sound/walk2.ogg"),
@@ -36,6 +37,7 @@ class Player(Character):
         self.next_accel_time = 0
         self.add_sprite = add_sprite
         self.alternate_walk = False
+        self.poof = None
         self.state = state
 
     def build_mount(self, mount):
@@ -57,12 +59,15 @@ class Player(Character):
         if self.spawning == 0:
             self.alive = "mounted"
 
+        if self.poof is not None and self.poof.alive():
+            self.poof.update(current_time)
+
         if self.alive == "spawning":
             self.next_update_time += 100
-            self.rect.topleft = (self.x, self.y)
             self.spawning -= 1
             self.frame = 5 if self.frame == 6 else self.frame + 1
             self.image = self.spawn_images[self.frame]
+            self.rect.topleft = (self.x, self.y)
             if self.frame >= 5 and (keys[pg.K_LEFT] or keys[pg.K_RIGHT] or keys[pg.K_SPACE]):
                 self.spawning = 0
                 self.alive = "mounted"
@@ -185,7 +190,6 @@ class Player(Character):
             score.collect_egg()
             collided_egg.kill()
 
-        self.rect.topleft = (self.x, self.y)
         if self.walking:
             if current_time > self.next_anim_time:
                 if self.x_speed != 0:
@@ -315,13 +319,16 @@ class Player(Character):
         self.lives -= 1
         self.spawning = 20
         self.alive = "unmounted"
+        self.poof = Poof(self.poof_images, self.x, self.y - 20)
+        self.add_sprite(None, self.poof)
         score.die()
 
     def respawn(self):
         self.frame = 1
-        self.rect = self.image.get_rect()
         self.x = 389
         self.y = 491
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (self.x, self.y)
         self.facing_right = True
         self.x_speed = 0
         self.y_speed = 0
@@ -329,3 +336,29 @@ class Player(Character):
         self.walking = True
         self.skidding = False
         self.alive = "spawning"
+
+
+class Poof(pg.sprite.Sprite):
+    def __init__(self, poof, x, y):
+        super().__init__()
+        self.poof = poof
+        self.image = self.poof[0]
+        self.rect = self.image.get_rect()
+        self.x = x
+        self.y = y
+        self.rect.topleft = (self.x, self.y)
+        self.animation_index = 0
+        self.next_animate = 0
+
+    def update(self, current_time):
+        if current_time < self.next_animate:
+            return
+        self.next_animate = current_time + 200
+
+        if self.animation_index < len(self.poof):
+            self.image = self.poof[self.animation_index]
+            self.rect = self.image.get_rect()
+            self.rect.topleft = (self.x, self.y)
+            self.animation_index += 1
+        else:
+            self.kill()

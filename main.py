@@ -7,7 +7,7 @@ import loader
 
 from enemy import Enemy
 from player import Player
-from actors import Platform, Godmode, Score
+from actors import Platform, GodMode, Score
 
 pg.init()
 pg.mixer.pre_init(44100, -16, 2, 512)
@@ -38,7 +38,8 @@ def draw_lives(lives, screen, life_image):
 
 
 def add_sprite(group, sprite):
-    group.add(sprite)
+    if group is not None:
+        group.add(sprite)
     all_sprites.add(sprite)
 
 
@@ -61,6 +62,7 @@ class Sprites:
     hunter = loader.load_sprite(73, 69, 12, 7, 3, 0, 1, sheet)
     spawn = loader.load_sliced_sprites(60, 60, "resources/graphics/spawn1.png")
     egg = loader.load_sprite(140, 69, 9, 7, 3, 6, 4, sheet)
+    poof = loader.load_sprite(414, 69, 11, 11, 3, 3, 3, sheet)
     alpha = loader.load_sprite(2, 93, 5, 7, 3, 6, 49, sheet)
     p1 = Platform(pg.image.load("resources/graphics/plat1.png"), 166, 550)
     p2 = Platform(loader.load_image(370, 0, 64, 8, 3, sheet), 315, 420)
@@ -75,8 +77,8 @@ class Sprites:
     platforms = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10]
 
 
-god = Godmode()
-spawn_points = [[690, 270], [378, 500], [327, 141], [48, 300]]
+god = GodMode()
+spawn_points = [[690, 270], [378, 491], [327, 141], [48, 294]]
 
 player = pg.sprite.RenderUpdates()
 enemies = pg.sprite.RenderUpdates()

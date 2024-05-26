@@ -121,11 +121,10 @@ class Score:
             xpos += 17
 
 
-class Godmode(pg.sprite.Sprite):
+class GodMode(pg.sprite.Sprite):
     def __init__(self):
         pg.sprite.Sprite.__init__(self)
-        self.pic = pg.image.load("resources/graphics/god.png")
-        self.image = self.pic
+        self.image = pg.image.load("resources/graphics/god.png")
         self.on = False
         self.rect = self.image.get_rect()
         self.rect.topleft = (850, 0)
