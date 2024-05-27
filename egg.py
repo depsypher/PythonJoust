@@ -4,10 +4,11 @@ import actors
 
 
 class Egg(actors.Character):
-    def __init__(self, egg_images, x, y, x_speed, y_speed):
+    def __init__(self, egg_images, chars_small, x, y, x_speed, y_speed):
         super().__init__()
-        self.images = egg_images
-        self.image = self.images[0]
+        self.egg_images = egg_images
+        self.chars_small = chars_small
+        self.image = self.egg_images[0]
         self.mask = pg.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.x = x
@@ -15,6 +16,7 @@ class Egg(actors.Character):
         self.x_speed = x_speed
         self.y_speed = y_speed
         self.rect.topleft = (x, y)
+        self.bonus = True   # until it hits a platform
 
     def update(self, current_time, platforms):
         self.y_speed += self.GRAVITY
@@ -34,6 +36,7 @@ class Egg(actors.Character):
         else:
             collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
             for collidedPlatform in collided_platforms:
+                self.bonus = False
                 self.bounce(collidedPlatform)
 
         # wrap round screens

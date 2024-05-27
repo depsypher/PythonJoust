@@ -46,6 +46,7 @@ def add_sprite(group, sprite):
 state = {
     'running': True,
     'paused':  False,
+    'god': GodMode(),
     'p_down_last_frame': False
 }
 
@@ -63,7 +64,8 @@ class Sprites:
     spawn = loader.load_sliced_sprites(60, 60, "resources/graphics/spawn1.png")
     egg = loader.load_sprite(140, 69, 9, 7, 3, 6, 4, sheet)
     poof = loader.load_sprite(414, 69, 11, 11, 3, 3, 3, sheet)
-    alpha = loader.load_sprite(2, 93, 5, 7, 3, 6, 49, sheet)
+    chars = loader.load_sprite(2, 93, 5, 7, 3, 6, 49, sheet)
+    chars_small = loader.load_sprite(1, 105, 5, 5, 3, 4, 36, sheet)
     p1 = Platform(pg.image.load("resources/graphics/plat1.png"), 166, 550)
     p2 = Platform(loader.load_image(370, 0, 64, 8, 3, sheet), 315, 420)
     p3 = Platform(loader.load_image(92, 0, 88, 9, 3, sheet), 250, 201)
@@ -77,7 +79,6 @@ class Sprites:
     platforms = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10]
 
 
-god = GodMode()
 spawn_points = [[690, 270], [378, 491], [327, 141], [48, 294]]
 
 player = pg.sprite.RenderUpdates()
@@ -136,24 +137,24 @@ async def main():
 
         # check for God mode toggle
         if keys[pg.K_g]:
-            god.toggle(current_time)
-            if not god.on:
+            state['god'].toggle(current_time)
+            if not state['god'].on:
                 screen.blit(clear_surface, (20, 20), (0, 0, 200, 20))
 
         if not state['paused']:
-            player.update(current_time, keys, platforms, enemies, god, eggs, score, state)
+            player.update(current_time, keys, platforms, enemies, eggs, score, state)
             platforms.update()
             enemies.update(current_time, keys, platforms, enemies)
             eggs.update(current_time, platforms)
 
-        if god.on:
+        if state['god'].on:
             font = pg.font.SysFont(None, 24)
-            img = font.render(f'FPS: {clock.get_fps():3.4f}\nx_speed: {p1.x_speed}', True, (0, 0, 255))
+            img = font.render(f'FPS: {clock.get_fps():3.4f} x_speed: {p1.x_speed}', True, (0, 0, 255))
             rect = img.get_rect().copy()
             rect.width += 10
             screen.blit(clear_surface, (20, 20), rect)
             screen.blit(img, (20, 20))
-            add_sprite(god_sprite, god)
+            add_sprite(god_sprite, state['god'])
         else:
             all_sprites.remove(god_sprite)
 
@@ -161,7 +162,7 @@ async def main():
         sprite_rects = all_sprites.draw(screen)
 
         draw_lives(p1.lives, screen, Sprites.life)
-        score.draw(screen, Sprites.alpha)
+        score.draw(screen, Sprites.chars)
 
         pg.display.update(lavaRect)
         pg.display.update(sprite_rects)

@@ -36,10 +36,10 @@ class Enemy(Character):
         self.mask = pg.mask.from_surface(surf)
         return surf
 
-    def killed(self, eggs, egg_images, killer, add_sprite, score):
+    def killed(self, eggs, egg_images, chars_small, killer, add_sprite, score):
         egg_x_speed = (self.x_speed + killer.x_speed) * 0.5
         egg_y_speed = (self.y_speed + killer.y_speed - 1) * 0.5
-        add_sprite(eggs, Egg(egg_images, self.x + 27, self.y + 21, egg_x_speed, egg_y_speed))
+        add_sprite(eggs, Egg(egg_images, chars_small, self.x + 27, self.y + 21, egg_x_speed, egg_y_speed))
         score.kill(self)
         self.alive = False
 

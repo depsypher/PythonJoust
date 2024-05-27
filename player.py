@@ -14,6 +14,7 @@ class Player(Character):
         self.mount = sprites.p1mount
         self.spawn_images = sprites.spawn
         self.egg_images = sprites.egg
+        self.chars_small = sprites.chars_small
         self.poof_images = sprites.poof
         self.sounds = {
             "walk1": pg.mixer.Sound("resources/sound/walk1.ogg"),
@@ -38,6 +39,7 @@ class Player(Character):
         self.add_sprite = add_sprite
         self.alternate_walk = False
         self.poof = None
+        self.score_badge = None
         self.state = state
 
     def build_mount(self, mount):
@@ -55,12 +57,15 @@ class Player(Character):
 #        return self.mask.to_surface(setcolor=(255, 0, 0))  # show mask for debugging
         return surf
 
-    def update(self, current_time, keys, platforms, enemies, god, eggs, score, state):
+    def update(self, current_time, keys, platforms, enemies, eggs, score, state):
         if self.spawning == 0:
             self.alive = "mounted"
 
         if self.poof is not None and self.poof.alive():
             self.poof.update(current_time)
+
+        if self.score_badge is not None and self.score_badge.alive():
+            self.score_badge.update(current_time)
 
         if self.alive == "spawning":
             self.next_update_time += 100
@@ -71,9 +76,9 @@ class Player(Character):
             if self.frame >= 5 and (keys[pg.K_LEFT] or keys[pg.K_RIGHT] or keys[pg.K_SPACE]):
                 self.spawning = 0
                 self.alive = "mounted"
-                self.do_mounted(current_time, eggs, enemies, god, keys, platforms, score)
+                self.do_mounted(current_time, eggs, enemies, state['god'], keys, platforms, score)
         elif self.alive == "mounted" or self.alive == "skidding":
-            self.do_mounted(current_time, eggs, enemies, god, keys, platforms, score)
+            self.do_mounted(current_time, eggs, enemies, state['god'], keys, platforms, score)
         elif self.alive == "unmounted":
             self.do_unmounted(current_time, platforms)
         else:
@@ -156,7 +161,7 @@ class Player(Character):
         for enemy in pg.sprite.spritecollide(self, enemies, False, pg.sprite.collide_mask):
             if enemy.alive:
                 if self.y < enemy.y:
-                    enemy.killed(eggs, self.egg_images, self, self.add_sprite, score)
+                    enemy.killed(eggs, self.egg_images, self.chars_small, self, self.add_sprite, score)
                     self.bounce(enemy)
                     enemy.bounce(self)
                 elif self.y - 5 > enemy.y:
@@ -187,7 +192,10 @@ class Player(Character):
         collided_eggs = pg.sprite.spritecollide(self, eggs, False, pg.sprite.collide_mask)
         for collided_egg in collided_eggs:
             self.sounds["egg"].play(0)
-            score.collect_egg()
+            bonus = collided_egg.bonus
+            points = score.collect_egg(bonus)[0]
+            self.score_badge = ScoreBadge(self.chars_small, collided_egg.x, collided_egg.y - 16, points, bonus)
+            self.add_sprite(None, self.score_badge)
             collided_egg.kill()
 
         if self.walking:
@@ -362,3 +370,46 @@ class Poof(pg.sprite.Sprite):
             self.animation_index += 1
         else:
             self.kill()
+
+
+class ScoreBadge(pg.sprite.Sprite):
+    def __init__(self, chars_small, x, y, points, bonus=False):
+        super().__init__()
+        self.chars_small = chars_small
+        self.image = self.chars_small[0]
+        self.rect = self.image.get_rect()
+        self.points = points
+        self.bonus = bonus
+        self.x = x
+        self.y = y
+        self.rect.topleft = (self.x, self.y)
+        self.animation_index = 0
+        self.ttl = 0
+
+    def build_score(self):
+        surf = pg.Surface((45, 33), pg.SRCALPHA)
+        index = 0
+        if self.bonus:
+            surf.blit(self.chars_small[5], (0, 0))
+            surf.blit(self.chars_small[0], (12, 0))
+            surf.blit(self.chars_small[0], (24, 0))
+            mask = pg.mask.from_surface(surf)
+            surf = mask.to_surface(setcolor=(0, 255, 0))
+
+        for digit in str(self.points):
+            d = int(digit)
+            surf.blit(self.chars_small[d], (12 * index, 18))
+            index += 1
+
+        return surf
+
+    def update(self, current_time):
+        if self.ttl == 0:
+            self.ttl = current_time + 500
+
+        if current_time > self.ttl:
+            self.kill()
+        else:
+            self.image = self.build_score()
+            self.rect = self.image.get_rect()
+            self.rect.topleft = (self.x, self.y)

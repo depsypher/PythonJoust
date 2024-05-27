@@ -88,11 +88,12 @@ class Score:
         self.eggs_collected = 0
         self.egg_points = [250, 500, 750, 1000]
 
-    def collect_egg(self):
+    def collect_egg(self, bonus):
         points = self.egg_points[min(self.eggs_collected, len(self.egg_points) - 1)]
-        self.score += points
+        bonus_points = 500 if bonus else 0
+        self.score += points + bonus_points
         self.eggs_collected += 1
-        return points
+        return points, bonus_points
 
     def kill(self, enemy):
         if enemy.enemyType == 1:
@@ -111,12 +112,12 @@ class Score:
     def draw(self, screen, digits):
         xpos = 222
         d = 10000000
-        seen = False
+        has_leading_digit = False
         while d >= 10:
             i = (self.score % d) // (d // 10)
-            if i != 0 or d == 10 or seen:
+            if i != 0 or d == 10 or has_leading_digit:
                 screen.blit(digits[i], [xpos, 570])
-                seen = True
+                has_leading_digit = True
             d //= 10
             xpos += 17
 

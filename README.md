@@ -11,7 +11,7 @@ https://depsypher.github.io/PythonJoust/
 ### Roadmap:
 - [x] First stage needs bottom platform
 - [ ] Add multiple stages with transitions between them
-- [ ] Show scoring when killing enemies, collecting eggs
+- [X] Show scoring when killing enemies, collecting eggs
 - [ ] Add lava troll
 - [ ] Make eggs hatch
 - [ ] Smarter enemies with different AI/speed based on type and level
