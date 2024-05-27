@@ -64,24 +64,6 @@ class Character(pg.sprite.Sprite):
                 self.frame = 5
 
 
-class Platform(pg.sprite.Sprite):
-    def __init__(self, image, x, y):
-        pg.sprite.Sprite.__init__(self)
-        if image is not None:
-            self.image = image
-            self.mask = pg.mask.from_surface(self.image)
-        else:
-            surf = pg.Surface((185, 9), pg.SRCALPHA)
-            pg.draw.rect(surf, (141, 73, 23), pg.Rect(0, 0, 185, 9))
-            self.mask = pg.mask.from_surface(surf)
-            self.image = surf
-
-        self.rect = self.image.get_rect()
-        self.x = x
-        self.y = y
-        self.rect.topleft = (x, y)
-
-
 class Score:
     def __init__(self):
         self.score = 0

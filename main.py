@@ -7,7 +7,8 @@ import loader
 
 from enemy import Enemy
 from player import Player
-from actors import Platform, GodMode, Score
+from actors import GodMode, Score
+from cliff import Cliff
 
 pg.init()
 pg.mixer.pre_init(44100, -16, 2, 512)
@@ -66,20 +67,23 @@ class Sprites:
     poof = loader.load_sprite(414, 69, 11, 11, 3, 3, 3, sheet)
     chars = loader.load_sprite(2, 93, 5, 7, 3, 6, 49, sheet)
     chars_small = loader.load_sprite(1, 105, 5, 5, 3, 4, 36, sheet)
-    p1 = Platform(pg.image.load("resources/graphics/plat1.png"), 166, 550)
-    p2 = Platform(loader.load_image(370, 0, 64, 8, 3, sheet), 315, 420)
-    p3 = Platform(loader.load_image(92, 0, 88, 9, 3, sheet), 250, 201)
-    p4 = Platform(loader.load_image(0, 0, 33, 7, 3, sheet), -10, 168)
-    p5 = Platform(loader.load_image(39, 0, 47, 7, 3, sheet), 759, 168)
-    p6 = Platform(loader.load_image(186, 0, 63, 8, 3, sheet), 0, 354)
-    p7 = Platform(loader.load_image(319, 0, 46, 7, 3, sheet), 770, 354)
-    p8 = Platform(loader.load_image(254, 0, 58, 11, 3, sheet), 606, 330)
-    p9 = Platform(None, -19, 550)
-    p10 = Platform(None, 723, 550)
-    platforms = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10]
+    c1 = Cliff(None, 0, 550)
+    c2 = Cliff(loader.load_image(370, 0, 64, 8, 3, sheet), 315, 420)     # mid-bottom
+    c3 = Cliff(loader.load_image(92, 0, 88, 9, 3, sheet), 250, 201)      # mid-top
+    c4 = Cliff(loader.load_image(0, 0, 33, 7, 3, sheet), -10, 168)          # top-left
+    c5 = Cliff(loader.load_image(39, 0, 47, 7, 3, sheet), 759, 168)      # top-right
+    c6 = Cliff(loader.load_image(186, 0, 63, 8, 3, sheet), 0, 354)       # bottom-left
+    c7 = Cliff(loader.load_image(319, 0, 46, 7, 3, sheet), 770, 354)     # bottom-right
+    c8 = Cliff(loader.load_image(254, 0, 58, 11, 3, sheet), 606, 330)    # mid-right
+    platforms = [c1, c2, c3, c4, c5, c6, c7, c8]
 
 
-spawn_points = [[690, 270], [378, 491], [327, 141], [48, 294]]
+spawn_points = [
+    [690, 270],     # right
+    [378, 491],     # bottom
+    [327, 141],     # top
+    [48, 294],      # left
+]
 
 player = pg.sprite.RenderUpdates()
 enemies = pg.sprite.RenderUpdates()
@@ -88,8 +92,8 @@ platforms = pg.sprite.RenderUpdates()
 god_sprite = pg.sprite.RenderUpdates()
 all_sprites = pg.sprite.RenderUpdates()
 
-p1 = Player(Sprites, add_sprite, state)
-add_sprite(player, p1)
+player1 = Player(Sprites, add_sprite, state)
+add_sprite(player, player1)
 add_sprite(platforms, Sprites.platforms)
 next_spawn_time = pg.time.get_ticks() + 2000
 enemies_to_spawn = 6  # test. make 6 enemies to start
@@ -149,7 +153,8 @@ async def main():
 
         if state['god'].on:
             font = pg.font.SysFont(None, 24)
-            img = font.render(f'FPS: {clock.get_fps():3.4f} x_speed: {p1.x_speed}', True, (0, 0, 255))
+            img = font.render(f'FPS: {clock.get_fps():3.4f}'
+                              f' x_speed: {player1.x_speed}', True, (0, 0, 255))
             rect = img.get_rect().copy()
             rect.width += 10
             screen.blit(clear_surface, (20, 20), rect)
@@ -161,7 +166,7 @@ async def main():
         lavaRect = draw_lava(screen)
         sprite_rects = all_sprites.draw(screen)
 
-        draw_lives(p1.lives, screen, Sprites.life)
+        draw_lives(player1.lives, screen, Sprites.life)
         score.draw(screen, Sprites.chars)
 
         pg.display.update(lavaRect)

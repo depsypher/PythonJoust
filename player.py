@@ -39,7 +39,7 @@ class Player(Character):
         self.add_sprite = add_sprite
         self.alternate_walk = False
         self.poof = None
-        self.score_badge = None
+        self.score_badges = []
         self.state = state
 
     def build_mount(self, mount):
@@ -64,8 +64,8 @@ class Player(Character):
         if self.poof is not None and self.poof.alive():
             self.poof.update(current_time)
 
-        if self.score_badge is not None and self.score_badge.alive():
-            self.score_badge.update(current_time)
+        for badge in self.score_badges:
+            badge.update(current_time, lambda b: self.score_badges.remove(b))
 
         if self.alive == "spawning":
             self.next_update_time += 100
@@ -194,8 +194,9 @@ class Player(Character):
             self.sounds["egg"].play(0)
             bonus = collided_egg.bonus
             points = score.collect_egg(bonus)[0]
-            self.score_badge = ScoreBadge(self.chars_small, collided_egg.x, collided_egg.y - 16, points, bonus)
-            self.add_sprite(None, self.score_badge)
+            badge = ScoreBadge(self.chars_small, collided_egg.x, collided_egg.y - 16, points, bonus)
+            self.add_sprite(None, badge)
+            self.score_badges.append(badge)
             collided_egg.kill()
 
         if self.walking:
@@ -217,6 +218,7 @@ class Player(Character):
                     self.frame = 3
                     self.playerChannel.stop()
 
+        self.rect.topleft = (self.x, self.y)
         self.image = self.build_mount(self.mount)
 
         if not self.facing_right:
@@ -287,10 +289,18 @@ class Player(Character):
                 self.playerChannel.play(self.sounds["hit"])
             else:
                 collided = True
-                self.walking = True
-                self.flap = 0
-                self.y_speed = 0
-                self.y = collider.y - self.rect.height + 1
+                if collider.rect.left + 25 < self.rect.centerx < collider.rect.right - 25:
+                    if self.walking:
+                        self.y = collider.y - self.rect.height + 1
+                    else:
+#                        self.state['paused'] = True
+                        self.y = collider.y - self.rect.height + 1
+                        self.walking = True
+                    self.flap = 0
+#                    self.y_speed = 0
+                else:
+                    self.y_speed = -2
+#                    self.y = collider.y - self.rect.height + 1
         elif self.y - self.y_speed > collider.rect.top and (
                 collider.rect.left < self.rect.centerx < collider.rect.right):
             # player is below collider
@@ -403,11 +413,12 @@ class ScoreBadge(pg.sprite.Sprite):
 
         return surf
 
-    def update(self, current_time):
+    def update(self, current_time, remove_badge):
         if self.ttl == 0:
             self.ttl = current_time + 500
 
         if current_time > self.ttl:
+            remove_badge(self)
             self.kill()
         else:
             self.image = self.build_score()
