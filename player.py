@@ -176,7 +176,7 @@ class Player(Character):
                     enemy.bounce(self)
 
         # catch when it is walking between screens
-        if (self.y == 109 or self.y == 295 or self.y == 491) and (self.x < 0 or self.x > 840):
+        if (self.y == 109 or self.y == 295) and (self.x < 0 or self.x > 840):
             self.walking = True
             self.y_speed = 0
         else:
@@ -289,18 +289,15 @@ class Player(Character):
                 self.playerChannel.play(self.sounds["hit"])
             else:
                 collided = True
-                if collider.rect.left + 25 < self.rect.centerx < collider.rect.right - 25:
-                    if self.walking:
-                        self.y = collider.y - self.rect.height + 1
-                    else:
-#                        self.state['paused'] = True
-                        self.y = collider.y - self.rect.height + 1
+                if collider.rect.left + 10 < self.rect.centerx < collider.rect.right - 10:
+                    if not self.walking:
                         self.walking = True
+
+                    self.y = collider.y - self.rect.height + 1
                     self.flap = 0
-#                    self.y_speed = 0
+                    self.y_speed = 0
                 else:
                     self.y_speed = -2
-#                    self.y = collider.y - self.rect.height + 1
         elif self.y - self.y_speed > collider.rect.top and (
                 collider.rect.left < self.rect.centerx < collider.rect.right):
             # player is below collider

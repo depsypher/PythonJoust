@@ -10,13 +10,22 @@ https://depsypher.github.io/PythonJoust/
 
 ### Roadmap:
 - [x] First stage needs bottom platform
-- [ ] Add multiple stages with transitions between them
-- [X] Show scoring when killing enemies, collecting eggs
+- [x] Bottom platform burns exposing lava
+- [x] Show scoring when killing enemies, collecting eggs
 - [ ] Add lava troll
 - [ ] Make eggs hatch
 - [ ] Smarter enemies with different AI/speed based on type and level
 - [ ] Add attract mode with high scores and intros
 - [ ] Add player 2?
+- [ ] Wave 1 (buzzard bait)
+- [ ] Wave 2 (survival wave)
+- [ ] Wave 3 (burn platform)
+- [ ] Wave 5 (egg wave)
+- [ ] Wave 6 (dissolve top middle cliff)
+- [ ] Wave 7 (survival, dissolve top left & right cliff)
+- [ ] Wave 8 (unbeatable pterodactyl?)
+- [ ] Wave 9 (dissolve middle cliff)
+- [ ] Wave 10 (egg wave, restore platforms)
 
 ### Reference material:
 * Arcade specs: https://seanriddle.com/willhard.html

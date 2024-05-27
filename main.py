@@ -67,7 +67,7 @@ class Sprites:
     poof = loader.load_sprite(414, 69, 11, 11, 3, 3, 3, sheet)
     chars = loader.load_sprite(2, 93, 5, 7, 3, 6, 49, sheet)
     chars_small = loader.load_sprite(1, 105, 5, 5, 3, 4, 36, sheet)
-    c1 = Cliff(None, 0, 550)
+    c1 = Cliff(None, -60, 550)
     c2 = Cliff(loader.load_image(370, 0, 64, 8, 3, sheet), 315, 420)     # mid-bottom
     c3 = Cliff(loader.load_image(92, 0, 88, 9, 3, sheet), 250, 201)      # mid-top
     c4 = Cliff(loader.load_image(0, 0, 33, 7, 3, sheet), -10, 168)          # top-left
@@ -85,6 +85,10 @@ spawn_points = [
     [48, 294],      # left
 ]
 
+next_spawn_time = pg.time.get_ticks() + 2000
+enemies_to_spawn = 6  # test. make 6 enemies to start
+score = Score()
+
 player = pg.sprite.RenderUpdates()
 enemies = pg.sprite.RenderUpdates()
 eggs = pg.sprite.RenderUpdates()
@@ -95,9 +99,6 @@ all_sprites = pg.sprite.RenderUpdates()
 player1 = Player(Sprites, add_sprite, state)
 add_sprite(player, player1)
 add_sprite(platforms, Sprites.platforms)
-next_spawn_time = pg.time.get_ticks() + 2000
-enemies_to_spawn = 6  # test. make 6 enemies to start
-score = Score()
 
 clock = pg.time.Clock()
 pg.display.set_caption('Joust')
@@ -145,9 +146,12 @@ async def main():
             if not state['god'].on:
                 screen.blit(clear_surface, (20, 20), (0, 0, 200, 20))
 
+        if enemies_to_spawn == 0 and len(enemies.sprites()) == 0:
+            Sprites.c1.burn()
+
         if not state['paused']:
             player.update(current_time, keys, platforms, enemies, eggs, score, state)
-            platforms.update()
+            platforms.update(current_time)
             enemies.update(current_time, keys, platforms, enemies)
             eggs.update(current_time, platforms)
 
