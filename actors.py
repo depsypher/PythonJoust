@@ -92,7 +92,7 @@ class Score:
         self.eggs_collected = 0
 
     def draw(self, screen, digits):
-        xpos = 222
+        xpos = 210
         d = 10000000
         has_leading_digit = False
         while d >= 10:

@@ -9,23 +9,30 @@ I made it playable online using pygbag for wasm conversion:
 https://depsypher.github.io/PythonJoust/
 
 ### Roadmap:
-- [x] First stage needs bottom platform
-- [x] Bottom platform burns exposing lava
-- [x] Show scoring when killing enemies, collecting eggs
-- [ ] Add lava troll
-- [ ] Make eggs hatch
-- [ ] Smarter enemies with different AI/speed based on type and level
-- [ ] Add attract mode with high scores and intros
-- [ ] Add player 2?
 - [ ] Wave 1 (buzzard bait)
+- [x] More or less authentic movement physics
+- [x] First stage needs bottom platform
+- [ ] Lava animates
+- [x] Show scoring when collecting eggs
+- [ ] Make eggs hatch
+- [ ] Smarter enemies
+- [ ] Pterodactyl comes out if you take too long
 - [ ] Wave 2 (survival wave)
+- [ ] Even smarter and faster enemies
+- [ ] Award bonus points upon survival
 - [ ] Wave 3 (burn platform)
+- [x] Bottom platform burns exposing lava
+- [ ] Add lava troll
 - [ ] Wave 5 (egg wave)
 - [ ] Wave 6 (dissolve top middle cliff)
 - [ ] Wave 7 (survival, dissolve top left & right cliff)
 - [ ] Wave 8 (unbeatable pterodactyl?)
 - [ ] Wave 9 (dissolve middle cliff)
-- [ ] Wave 10 (egg wave, restore platforms)
+- [ ] Wave 10 (egg wave, restore cliffs)
+- [ ] Attract mode
+- [ ] Title screen and intro sequence
+- [ ] High scores
+- [ ] Add player 2?
 
 ### Reference material:
 * Arcade specs: https://seanriddle.com/willhard.html

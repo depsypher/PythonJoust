@@ -38,7 +38,10 @@ class Cliff(pg.sprite.Sprite):
         if current_time < self.next_update_time:
             return
 
-        self.next_update_time = current_time + 200
+        if self.burning < 30:
+            self.next_update_time = current_time + 15
+        else:
+            self.next_update_time = current_time + 200
 
         if self.burning >= 0:
             self.build_bottom_cliff()
