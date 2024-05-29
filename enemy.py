@@ -7,7 +7,7 @@ from actors import Character
 
 
 class Enemy(Character):
-    def __init__(self, sprites, start_pos, enemy_type):
+    def __init__(self, sprites, start_pos, enemy_type: int):
         super().__init__()
         self.buzzard = sprites.buzzard
         if enemy_type == 0:

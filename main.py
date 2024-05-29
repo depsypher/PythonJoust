@@ -42,8 +42,6 @@ async def main():
             state['wave_start'] = current_time
             state['increment_wave'] = False
             wave_index = current_wave % len(waves) if current_wave != len(waves) else len(waves)
-            wave_data = waves[wave_index]
-            enemies_spawning = wave_data['enemies'].copy()
             reset = len(waves) - 1 if wave_index == 1 else wave_index - 1
             for task_data in waves[reset]['tasks']:
                 task_data['started'] = False
@@ -89,7 +87,8 @@ async def main():
             if not state['god'].on:
                 screen.blit(clear_surface, (20, 20), (0, 0, 200, 20))
 
-        if len(enemies_spawning) == 0 and len(enemies.sprites()) == 0 and len(eggs.sprites()) == 0:
+        if (current_time > state['wave_start'] + 6000 and len(enemies_spawning) == 0
+                and len(enemies.sprites()) == 0 and len(eggs.sprites()) == 0):
             state['increment_wave'] = True
 
         if not state['paused']:
@@ -125,6 +124,8 @@ async def main():
 
 
 messages = []
+enemies_spawning = []
+
 player = pg.sprite.RenderUpdates()
 enemies = pg.sprite.RenderUpdates()
 eggs = pg.sprite.RenderUpdates()
@@ -147,7 +148,7 @@ def draw_text(text, x, y, duration, color=None, wave=None):
     messages.append(message)
 
 
-def generate_enemies(sprites, enemies, spawn_points, enemy_type):
+def generate_enemies(sprites, enemies, spawn_points, enemy_type: int):
     chosen = spawn_points.copy()
     random.shuffle(chosen)
     add_sprite(enemies, Enemy(sprites, chosen[0], enemy_type))
@@ -164,6 +165,11 @@ def draw_lives(lives, screen, life_image):
     for num in range(lives):
         x = start_x + num * 19
         screen.blit(life_image, [x, 570])
+
+
+def set_spawning(*to_spawn):
+    global enemies_spawning
+    enemies_spawning = list(to_spawn)
 
 
 class Sprites:
@@ -197,12 +203,13 @@ spawn_points = [
     [48, 294],      # left
 ]
 
+
 state = {
     'running': True,
     'paused':  False,
     'god': GodMode(),
     'p_down_last_frame': False,
-    'next_spawn_time': pg.time.get_ticks() + 2000,
+    'next_spawn_time': 0,
     'wave': 0,
     'wave_start': 0,
     'increment_wave': True,
@@ -224,23 +231,31 @@ state = {
                     'task': (draw_text, ('BUZZARD BAIT!', 303, 396, 1500, (240, 240, 240))),
                     'started': False
                 },
-            ],
-            'enemies': [0, 0, 0]
+                {
+                    'delay': 5000,
+                    'task': (set_spawning, ([0, 0, 0])),
+                    'started': False
+                },
+            ]
         },
         2: {
             'tasks': [
                 {
-                    'delay': 1500,
+                    'delay': 0,
                     'task': (draw_text, ("WAVE",  342, 240, 3000, (240, 240, 240))),
                     'started': False
                 },
                 {
-                    'delay': 1500,
-                    'task': (draw_text, ('SURVIVAL WAVE', 260, 320, 3000, (240, 240, 240))),
+                    'delay': 0,
+                    'task': (draw_text, ('SURVIVAL WAVE', 280, 320, 3000, (240, 240, 240))),
+                    'started': False
+                },
+                {
+                    'delay': 4000,
+                    'task': (set_spawning, ([0, 0, 0, 0])),
                     'started': False
                 },
             ],
-            'enemies': [0, 0, 0, 0]
         },
         3: {
             'tasks': [
@@ -254,8 +269,12 @@ state = {
                     'task': (Sprites.c1.burn, ()),
                     'started': False
                 },
+                {
+                    'delay': 4000,
+                    'task': (set_spawning, ([0, 0, 0, 0, 0, 0])),
+                    'started': False
+                },
             ],
-            'enemies': [0, 0, 0, 0, 0, 0]
         },
         4: {
             'tasks': [
@@ -264,13 +283,16 @@ state = {
                     'task': (draw_text, ("WAVE",  342, 240, 3000, (240, 240, 240))),
                     'started': False
                 },
+                {
+                    'delay': 4000,
+                    'task': (set_spawning, ([0, 0, 0, 1, 1, 1])),
+                    'started': False
+                },
             ],
-            'enemies': [0, 0, 0, 1, 1, 1]
         },
     }
 }
 
-enemies_spawning = []
 score = Score()
 
 player1 = Player(Sprites, add_sprite, state)
