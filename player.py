@@ -44,21 +44,6 @@ class Player(Character):
         self.score_badges = []
         self.state = state
 
-    def build_mount(self, mount):
-        if self.flap == 1:
-            frame = 5
-        elif self.flap == 2 or (self.flap == 0 and not self.walking):
-            frame = 6
-        else:
-            frame = self.frame
-        ostrich = self.unmounted_images[frame]
-        surf = pg.Surface((60, 60), pg.SRCALPHA)
-        surf.blit(mount, (12, 6 if self.skidding else 0))
-        surf.blit(ostrich, (0, 0))
-        self.mask = pg.mask.from_surface(surf)
-#        return self.mask.to_surface(setcolor=(255, 0, 0))  # show mask for debugging
-        return surf
-
     def update(self, current_time, keys, platforms, enemies, eggs, score, state):
         if self.spawning == 0:
             self.alive = "mounted"
@@ -79,7 +64,7 @@ class Player(Character):
                 self.spawning = 0
                 self.alive = "mounted"
                 self.do_mounted(current_time, eggs, enemies, state['god'], keys, platforms, score)
-        elif self.alive == "mounted" or self.alive == "skidding":
+        elif self.alive == "mounted":
             self.do_mounted(current_time, eggs, enemies, state['god'], keys, platforms, score)
         elif self.alive == "unmounted":
             self.do_unmounted(current_time, platforms)
@@ -173,24 +158,20 @@ class Player(Character):
                     self.bounce(enemy)
                     enemy.bounce(self)
 
-        # catch when it is walking between screens
-        if (self.y == 109 or self.y == 295) and (self.x < 0 or self.x > 840):
-            self.walking = True
-            self.y_speed = 0
-        else:
-            collided = False
-            collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
+        collided = False
+        collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
 
-            for collidedPlatform in collided_platforms:
-                if self.y < 559:
-                    collided = self.bounce(collidedPlatform)
+        for collidedPlatform in collided_platforms:
+            if self.y < 559:
+                collided = self.bounce(collidedPlatform)
 
-            if not collided:
-                self.walking = False
+        if not collided:
+            self.walking = False
+            self.skidding = 0
 
-            if self.y > 559:
-                score.reset()
-                self.die(score)
+        if self.y > 559:
+            score.reset()
+            self.die(score)
 
         collided_eggs = pg.sprite.spritecollide(self, eggs, False, pg.sprite.collide_mask)
         for collided_egg in collided_eggs:
@@ -292,7 +273,8 @@ class Player(Character):
                 self.playerChannel.play(self.sounds["hit"])
             else:
                 collided = True
-                if collider.rect.left + 10 < self.rect.centerx < collider.rect.right - 10:
+                grace = 5
+                if collider.rect.left + grace < self.rect.centerx < collider.rect.right - grace:
                     if not self.walking:
                         self.walking = True
 
@@ -354,6 +336,24 @@ class Player(Character):
         self.walking = True
         self.skidding = False
         self.alive = "spawning"
+
+    def build_mount(self, mount):
+        if self.flap == 1:
+            frame = 5
+        elif self.flap == 2 or (self.flap == 0 and not self.walking):
+            frame = 6
+        else:
+            frame = self.frame
+        ostrich = self.unmounted_images[frame]
+        surf = pg.Surface((60, 60), pg.SRCALPHA)
+        surf.blit(mount, (12, 6 if self.skidding else 0))
+        surf.blit(ostrich, (0, 0))
+        self.mask = pg.mask.from_surface(surf)
+        #        return self.mask.to_surface(setcolor=(255, 0, 0))  # show mask for debugging
+        return surf
+
+    def build_spawn(self):
+        pass
 
 
 class Poof(pg.sprite.Sprite):

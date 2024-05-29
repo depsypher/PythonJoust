@@ -74,9 +74,6 @@ class Enemy(Character):
 
             self.velocity()
 
-            if self.y > 570:  # hit lava
-                self.kill()
-
             if self.x < -48:  # off the left. If enemy is dead then remove entirely
                 if self.alive:
                     self.x = 900
@@ -109,15 +106,12 @@ class Enemy(Character):
             # check for platform collision
             self.walking = False
 
-            # catch when it is walking between screens
-            if (self.y == 109 or self.y == 295 or self.y == 491) and (self.x < 0 or self.x > 840):
-                self.walking = True
-                self.y_speed = 0
-            else:
-                collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
+            collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
 
-                for collidedPlatform in collided_platforms:
-                    self.bounce(collidedPlatform)
+            for collidedPlatform in collided_platforms:
+                self.bounce(collidedPlatform)
+                if self.y > 559:  # hit lava
+                    self.kill()
 
             self.rect.topleft = (self.x, self.y)
             self.animate(current_time)

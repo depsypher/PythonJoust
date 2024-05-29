@@ -37,6 +37,7 @@ async def main():
         waves = state['waves']
 
         if state['increment_wave']:
+            score.reset()
             current_wave += 1
             state['wave'] = current_wave
             state['wave_start'] = current_time
@@ -185,12 +186,12 @@ class Sprites:
     chars = loader.load_sprite(1, 93, 11, 7, 3, 0, 50, sheet)
     chars_small = loader.load_sprite(1, 105, 5, 5, 3, 4, 36, sheet)
     c1 = Cliff(None, -60, 550, flames)
-    c2 = Cliff(loader.load_image(370, 0, 64, 8, 3, sheet), 315, 420)     # mid-bottom
-    c3 = Cliff(loader.load_image(92, 0, 88, 9, 3, sheet), 250, 201)      # mid-top
-    c4 = Cliff(loader.load_image(0, 0, 33, 7, 3, sheet), -10, 168)          # top-left
-    c5 = Cliff(loader.load_image(39, 0, 47, 7, 3, sheet), 759, 168)      # top-right
-    c6 = Cliff(loader.load_image(186, 0, 63, 8, 3, sheet), 0, 354)       # bottom-left
-    c7 = Cliff(loader.load_image(319, 0, 46, 7, 3, sheet), 770, 354)     # bottom-right
+    c2 = Cliff(loader.load_image(385, 0, 64, 8, 3, sheet), 315, 420)     # mid-bottom
+    c3 = Cliff(loader.load_image(82, 0, 88, 9, 3, sheet), 250, 201)      # mid-top
+    c4 = Cliff(loader.load_image(0, 9, 50, 7, 3, sheet), -60, 168)          # top-left
+    c5 = Cliff(loader.load_image(34, 0, 47, 7, 3, sheet), 759, 168)      # top-right
+    c6 = Cliff(loader.load_image(173, 0, 80, 8, 3, sheet), -50, 354)        # bottom-left
+    c7 = Cliff(loader.load_image(319, 0, 63, 7, 3, sheet), 770, 354)     # bottom-right
     c8 = Cliff(loader.load_image(254, 0, 58, 11, 3, sheet), 606, 330)    # mid-right
     platforms = [c1, c2, c3, c4, c5, c6, c7, c8]
 
