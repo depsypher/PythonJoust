@@ -111,13 +111,11 @@ async def main():
         else:
             all_sprites.remove(god_sprite)
 
-        lavaRect = draw_lava(screen)
         sprite_rects = all_sprites.draw(screen)
 
         draw_lives(player1.lives, screen, Sprites.life)
         score.draw(screen, Sprites.chars)
 
-        pg.display.update(lavaRect)
         pg.display.update(sprite_rects)
 
         await asyncio.sleep(0)
@@ -154,12 +152,6 @@ def generate_enemies(sprites, enemies, spawn_points, enemy_type: int):
     add_sprite(enemies, Enemy(sprites, chosen[0], enemy_type))
 
 
-def draw_lava(screen):
-    lava_rect = [0, 620, 900, 80]
-    pg.draw.rect(screen, (255, 0, 0), lava_rect)
-    return lava_rect
-
-
 def draw_lives(lives, screen, life_image):
     start_x = 330
     for num in range(lives):
@@ -189,9 +181,10 @@ class Sprites:
     spawn = loader.load_sliced_sprites(60, 60, "resources/graphics/spawn1.png")
     egg = loader.load_sprite(140, 69, 9, 7, 3, 6, 4, sheet)
     poof = loader.load_sprite(414, 69, 11, 11, 3, 3, 3, sheet)
+    flames = loader.load_sprite(1, 69, 8, 18, 3, 3, 4, sheet)
     chars = loader.load_sprite(1, 93, 11, 7, 3, 0, 50, sheet)
     chars_small = loader.load_sprite(1, 105, 5, 5, 3, 4, 36, sheet)
-    c1 = Cliff(None, -60, 550)
+    c1 = Cliff(None, -60, 550, flames)
     c2 = Cliff(loader.load_image(370, 0, 64, 8, 3, sheet), 315, 420)     # mid-bottom
     c3 = Cliff(loader.load_image(92, 0, 88, 9, 3, sheet), 250, 201)      # mid-top
     c4 = Cliff(loader.load_image(0, 0, 33, 7, 3, sheet), -10, 168)          # top-left

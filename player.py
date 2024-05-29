@@ -148,10 +148,6 @@ class Player(Character):
 
         self.velocity()
 
-        if self.y > 570:
-            score.reset()
-            self.die(score)
-
         if self.x < -48:
             self.x = 900
         if self.x > 900:
@@ -186,10 +182,15 @@ class Player(Character):
             collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
 
             for collidedPlatform in collided_platforms:
-                collided = self.bounce(collidedPlatform)
+                if self.y < 559:
+                    collided = self.bounce(collidedPlatform)
 
             if not collided:
                 self.walking = False
+
+            if self.y > 559:
+                score.reset()
+                self.die(score)
 
         collided_eggs = pg.sprite.spritecollide(self, eggs, False, pg.sprite.collide_mask)
         for collided_egg in collided_eggs:
