@@ -34,7 +34,9 @@ class Player(Character):
         self.lives = 5
         self.alive = "spawning"
         self.skidding = 0
-        self.spawning = 20
+        self.spawning = 0
+        self.x = 290
+        self.y = 491
         self.next_accel_time = 0
         self.add_sprite = add_sprite
         self.alternate_walk = False

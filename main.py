@@ -62,7 +62,7 @@ async def main():
 
         # make enemies
         if current_time > state['next_spawn_time'] and len(enemies_spawning) > 0:
-            enemy_type = enemies_spawning[0]#random.randint(0, 1)
+            enemy_type = enemies_spawning[0]
             generate_enemies(Sprites, enemies, spawn_points, enemy_type)
             enemies_spawning.pop(0)
             state['next_spawn_time'] = current_time + 2000
@@ -172,6 +172,12 @@ def set_spawning(*to_spawn):
     enemies_spawning = list(to_spawn)
 
 
+def create_player():
+    global player1
+    add_sprite(player, player1)
+    player1.lives -= 1
+
+
 class Sprites:
     sheet = "resources/graphics/spritesheet.png"
     life = pg.image.load("resources/graphics/life.png").convert_alpha()
@@ -216,6 +222,11 @@ state = {
     'waves': {
         1: {
             'tasks': [
+                {
+                    'delay': 1600,
+                    'task': (create_player, ()),
+                    'started': False
+                },
                 {
                     'delay': 1500,
                     'task': (draw_text, ("WAVE",  342, 240, 3000, (240, 240, 240))),
@@ -292,11 +303,8 @@ state = {
         },
     }
 }
-
-score = Score()
-
 player1 = Player(Sprites, add_sprite, state)
-add_sprite(player, player1)
 add_sprite(platforms, Sprites.platforms)
+score = Score()
 
 asyncio.run(main())
