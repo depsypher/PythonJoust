@@ -66,7 +66,7 @@ async def main():
             enemy_type = enemies_spawning[0]
             generate_enemies(Sprites, enemies, spawn_points, enemy_type)
             enemies_spawning.pop(0)
-            state['next_spawn_time'] = current_time + 2000
+            state['next_spawn_time'] = current_time + 1000
 
         keys = pg.key.get_pressed()
         pg.event.clear()
@@ -75,12 +75,8 @@ async def main():
         if keys[pg.K_ESCAPE]:
             state['running'] = False
 
-        if keys[pg.K_p]:
-            if not state['p_down_last_frame']:
-                state['paused'] = not state['paused']
-            state['p_down_last_frame'] = True
-        else:
-            state['p_down_last_frame'] = False
+        on_key(keys, pg.K_p, toggle_pause)
+        on_key(keys, pg.K_k, lambda: player1.die(score))
 
         # check for God mode toggle
         if keys[pg.K_g]:
@@ -171,12 +167,25 @@ def create_player():
     player1.lives -= 1
 
 
+def on_key(keys, key, action):
+    if keys[key]:
+        if key not in state['keys_last_frame']:
+            action()
+        state['keys_last_frame'].append(key)
+    elif key in state['keys_last_frame']:
+        state['keys_last_frame'].remove(key)
+
+
+def toggle_pause():
+    state['paused'] = not state['paused']
+
+
 class Sprites:
     sheet = "resources/graphics/spritesheet.png"
     life = pg.image.load("resources/graphics/life.png").convert_alpha()
     p1mount = loader.load_image(58, 79, 12, 7, 3, sheet)
     ostrich = loader.load_sprite(348, 19, 16, 20, 3, 5, 8, sheet)
-    buzzard = loader.load_sprite(191, 44, 20, 14, 3, 3, 7, sheet)
+    buzzard = loader.load_sprite(191, 44, 20, 20, 3, 3, 7, sheet)
     bounder = loader.load_sprite(58, 69, 12, 7, 3, 0, 1, sheet)
     hunter = loader.load_sprite(73, 69, 12, 7, 3, 0, 1, sheet)
     spawn = loader.load_sliced_sprites(60, 60, "resources/graphics/spawn1.png")
@@ -189,7 +198,7 @@ class Sprites:
     c2 = Cliff(loader.load_image(385, 0, 64, 8, 3, sheet), 315, 420)     # mid-bottom
     c3 = Cliff(loader.load_image(82, 0, 88, 9, 3, sheet), 250, 201)      # mid-top
     c4 = Cliff(loader.load_image(0, 9, 50, 7, 3, sheet), -60, 168)          # top-left
-    c5 = Cliff(loader.load_image(34, 0, 47, 7, 3, sheet), 759, 168)      # top-right
+    c5 = Cliff(loader.load_image(0, 0, 64, 7, 3, sheet), 759, 168)      # top-right
     c6 = Cliff(loader.load_image(173, 0, 80, 8, 3, sheet), -50, 354)        # bottom-left
     c7 = Cliff(loader.load_image(319, 0, 63, 7, 3, sheet), 770, 354)     # bottom-right
     c8 = Cliff(loader.load_image(254, 0, 58, 11, 3, sheet), 606, 330)    # mid-right
@@ -198,7 +207,7 @@ class Sprites:
 
 spawn_points = [
     [690, 270],     # right
-    [378, 491],     # bottom
+    [376, 492],     # bottom
     [327, 141],     # top
     [48, 294],      # left
 ]
@@ -208,7 +217,7 @@ state = {
     'running': True,
     'paused':  False,
     'god': GodMode(),
-    'p_down_last_frame': False,
+    'keys_last_frame': [],
     'next_spawn_time': 0,
     'wave': 0,
     'wave_start': 0,

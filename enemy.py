@@ -9,14 +9,19 @@ from actors import Character
 class Enemy(Character):
     def __init__(self, sprites, start_pos, enemy_type: int):
         super().__init__()
+        self.audio_channel = pg.mixer.Channel(1)
+        self.sounds = {
+            "spawn": pg.mixer.Sound("resources/sound/spawn-enemy.ogg"),
+        }
         self.buzzard = sprites.buzzard
         if enemy_type == 0:
-            self.mount = sprites.bounder
+            self.mount = sprites.bounder[0]
         else:
-            self.mount = sprites.hunter
+            self.mount = sprites.hunter[0]
         self.alive = True
+        self.spawning = 20
         self.spawn_images = sprites.spawn
-        self.enemyType = enemy_type
+        self.enemy_type = enemy_type
         self.image = self.spawn_images[0]
         self.mask = pg.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
@@ -33,16 +38,17 @@ class Enemy(Character):
             return
         self.next_update_time = current_time + 30
 
-        if self.spawning:
-            self.frame += 1
-            self.image = self.spawn_images[self.frame]
+        if self.spawning >= 0:
+            if self.spawning == 20:
+                self.audio_channel.stop()
+                self.audio_channel.play(self.sounds["spawn"])
+
+            self.image = self.build_spawn(self.buzzard[2], 20 - self.spawning)
             if not self.facing_right:
                 self.image = pg.transform.flip(self.image, True, False)
 
-            self.next_update_time += 100
             self.rect.topleft = (self.x, self.y)
-            if self.frame == 5:
-                self.spawning = False
+            self.spawning -= 1
         else:
             speed = abs(self.x_speed)
             if speed < self.target_x_speed:
@@ -63,7 +69,7 @@ class Enemy(Character):
             self.rect.topleft = (self.x, self.y)
 
             self.animate(current_time)
-            self.image = self.build_mount(self.buzzard[self.frame], self.mount[0])
+            self.image = self.build_mount(self.buzzard[self.frame], self.mount)
 
             if self.x_speed < 0 or (self.x_speed == 0 and not self.facing_right):
                 self.image = pg.transform.flip(self.image, True, False)

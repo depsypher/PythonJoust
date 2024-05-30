@@ -11,16 +11,11 @@ WALK_ANIM_SPEED = {
     4: 15
 }
 
+
 class Player(Character):
     def __init__(self, sprites, add_sprite, state):
         super().__init__()
-        self.frame = 2
-        self.unmounted_images = sprites.ostrich
-        self.mount = sprites.p1mount
-        self.spawn_images = sprites.spawn
-        self.egg_images = sprites.egg
-        self.chars_small = sprites.chars_small
-        self.poof_images = sprites.poof
+        self.audio_channel = pg.mixer.Channel(0)
         self.sounds = {
             "walk1": pg.mixer.Sound("resources/sound/walk1.ogg"),
             "walk2": pg.mixer.Sound("resources/sound/walk2.ogg"),
@@ -30,16 +25,23 @@ class Player(Character):
             "bump": pg.mixer.Sound("resources/sound/bump.ogg"),
             "hit": pg.mixer.Sound("resources/sound/hit.ogg"),
             "egg": pg.mixer.Sound("resources/sound/egg.ogg"),
+            "spawn": pg.mixer.Sound("resources/sound/spawn.ogg"),
+            "energize": pg.mixer.Sound("resources/sound/energize.ogg"),
         }
+        self.unmounted_images = sprites.ostrich
+        self.mount = sprites.p1mount
+        self.spawn_images = sprites.spawn
+        self.egg_images = sprites.egg
+        self.chars_small = sprites.chars_small
+        self.poof_images = sprites.poof
         self.image = self.spawn_images[0]
         self.mask = pg.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
+        self.frame = 2
         self.flap = 0
-        self.playerChannel = pg.mixer.Channel(0)
         self.lives = 5
-        self.alive = "spawning"
+        self.alive = "mounted"
         self.skidding = 0
-        self.spawning = 0
         self.x = 290
         self.y = 491
         self.next_accel_time = 0
@@ -50,9 +52,6 @@ class Player(Character):
         self.state = state
 
     def update(self, current_time, keys, platforms, enemies, eggs, score, state):
-        if self.spawning == 0:
-            self.alive = "mounted"
-
         if self.poof is not None and self.poof.alive():
             self.poof.update(current_time)
 
@@ -60,13 +59,27 @@ class Player(Character):
             badge.update(current_time, lambda b: self.score_badges.remove(b))
 
         if self.alive == "spawning":
-            self.next_update_time += 100
-            self.spawning -= 1
-            self.frame = 5 if self.frame == 6 else self.frame + 1
-            self.image = self.spawn_images[self.frame]
-            self.rect.topleft = (self.x, self.y)
-            if self.frame >= 5 and (keys[pg.K_LEFT] or keys[pg.K_RIGHT] or keys[pg.K_SPACE]):
-                self.spawning = 0
+            if current_time < self.next_update_time:
+                return
+            if self.spawning >= 0:
+                self.next_update_time += 26
+                self.image = self.build_spawn(self.unmounted_images[3], 20 - self.spawning)
+                self.rect.topleft = (self.x, self.y)
+                if self.spawning == 18:
+                    self.sounds["spawn"].play(0)
+                self.spawning -= 1
+            elif self.spawning > -80:
+                self.next_update_time += 80
+                self.image = self.build_spawn(self.unmounted_images[3], 20)
+                self.rect.topleft = (self.x, self.y)
+                if self.spawning == -1:
+                    self.audio_channel.play(self.sounds["energize"])
+                self.spawning -= 1
+                if keys[pg.K_LEFT] or keys[pg.K_RIGHT] or keys[pg.K_SPACE]:
+                    self.audio_channel.stop()
+                    self.alive = "mounted"
+                    self.do_mounted(current_time, eggs, enemies, state['god'], keys, platforms, score)
+            else:
                 self.alive = "mounted"
                 self.do_mounted(current_time, eggs, enemies, state['god'], keys, platforms, score)
         elif self.alive == "mounted":
@@ -91,7 +104,7 @@ class Player(Character):
                     self.x_speed += slow * 3
             self.skidding -= 1
         elif self.walking and ((self.x_speed > 3 and keys[pg.K_LEFT]) or (self.x_speed < -3 and keys[pg.K_RIGHT])):
-            self.playerChannel.play(self.sounds["skid"])
+            self.audio_channel.play(self.sounds["skid"])
             self.frame = 4
             self.skidding = 30
         elif keys[pg.K_LEFT]:
@@ -122,14 +135,14 @@ class Player(Character):
                     self.x_speed += 1
 
                 self.y_speed -= 3
-                self.playerChannel.stop()
+                self.audio_channel.stop()
                 self.sounds["flap_dn"].play(0)
                 self.flap = 2
             else:
                 self.flap = 1
         else:
             if self.flap == 1:
-                self.playerChannel.stop()
+                self.audio_channel.stop()
                 self.sounds["flap_up"].play(0)
             self.flap = 0
 
@@ -192,14 +205,14 @@ class Player(Character):
             collided = True
             self.x += -21 if self.x_speed > 0 else 21
             self.x_speed = -self.x_speed
-            self.playerChannel.play(self.sounds["bump"])
+            self.audio_channel.play(self.sounds["bump"])
         elif collider.rect.left < self.rect.centerx < collider.rect.right and (
                 collider.rect.centery > self.rect.centery):
             # coming in from the top?
             if enemy:
                 self.y_speed = max(-self.y_speed, -6)
                 self.y = collider.y - 25
-                self.playerChannel.play(self.sounds["hit"])
+                self.audio_channel.play(self.sounds["hit"])
             else:
                 collided = True
                 grace = 5
@@ -216,29 +229,29 @@ class Player(Character):
                 collider.rect.left < self.rect.centerx < collider.rect.right):
             # player is below collider
             collided = True
-            self.playerChannel.play(self.sounds["bump"])
+            self.audio_channel.play(self.sounds["bump"])
             self.y = self.y + 10
             self.y_speed = -self.y_speed
         elif self.rect.centerx < collider.rect.centerx:
             # player is to left of collider
             collided = True
             if enemy:
-                self.playerChannel.play(self.sounds["hit"])
+                self.audio_channel.play(self.sounds["hit"])
                 self.y_speed = max(-self.y_speed, -3)
                 self.x_speed = max(-self.x_speed, -3)
             elif self.rect.bottom > collider.rect.bottom:
-                self.playerChannel.play(self.sounds["bump"])
+                self.audio_channel.play(self.sounds["bump"])
                 self.x = self.x - (2 * abs(self.x_speed))
                 self.x_speed = -3
         elif self.rect.centerx > collider.rect.centerx:
             # player is to right of collider
             collided = True
             if enemy:
-                self.playerChannel.play(self.sounds["hit"])
+                self.audio_channel.play(self.sounds["hit"])
                 self.y_speed = max(-self.y_speed, -3)
                 self.x_speed = min(-self.x_speed, 3)
             elif self.rect.bottom > collider.rect.bottom:
-                self.playerChannel.play(self.sounds["bump"])
+                self.audio_channel.play(self.sounds["bump"])
                 self.x = self.x + (2 * abs(self.x_speed))
                 self.x_speed = 3
 
@@ -278,7 +291,7 @@ class Player(Character):
     def egg_collision(self, eggs, score):
         collided_eggs = pg.sprite.spritecollide(self, eggs, False, pg.sprite.collide_mask)
         for collided_egg in collided_eggs:
-            self.sounds["egg"].play(0)
+            self.sounds["egg"].play(0)  # todo
             bonus = collided_egg.bonus
             points = score.collect_egg(bonus)[0]
             badge = ScoreBadge(self.chars_small, collided_egg.x, collided_egg.y - 16, points, bonus)
@@ -302,7 +315,7 @@ class Player(Character):
                         self.alternate_walk = not self.alternate_walk
                 else:
                     self.frame = 3
-                    self.playerChannel.stop()
+                    self.audio_channel.stop()
 
     def die(self, score):
         self.lives -= 1
@@ -314,8 +327,8 @@ class Player(Character):
 
     def respawn(self):
         self.frame = 1
-        self.x = 389
-        self.y = 491
+        self.x = 376
+        self.y = 492
         self.rect = self.image.get_rect()
         self.rect.topleft = (self.x, self.y)
         self.facing_right = True
@@ -340,9 +353,6 @@ class Player(Character):
         self.mask = pg.mask.from_surface(surf)
         #        return self.mask.to_surface(setcolor=(255, 0, 0))  # show mask for debugging
         return surf
-
-    def build_spawn(self):
-        pass
 
 
 class Poof(pg.sprite.Sprite):

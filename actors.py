@@ -1,5 +1,10 @@
 import pygame as pg
 import math
+import random
+
+YELLOW = (255, 255, 85)
+GREY = (153, 153, 169)
+WHITE = (255, 255, 255)
 
 
 class Character(pg.sprite.Sprite):
@@ -29,7 +34,7 @@ class Character(pg.sprite.Sprite):
         self.target_x_speed = 8
         self.walking = True
         self.facing_right = True
-        self.spawning = True
+        self.spawning = 0
 
     def velocity(self):
         if not self.walking:
@@ -73,6 +78,27 @@ class Character(pg.sprite.Sprite):
             else:
                 self.frame = 6
 
+    def build_spawn(self, bird, index):
+        y = 60 - index * 3
+        colors = [YELLOW, GREY, WHITE]
+        color1 = colors[random.randint(0, 2)]
+        color2 = colors[random.randint(0, 2)]
+
+        surf1 = pg.Surface((60, 60), pg.SRCALPHA)
+        surf1.blit(self.mount, (12, y))
+        mask = pg.mask.from_surface(surf1)
+        surf1 = mask.to_surface(setcolor=color1)
+
+        surf2 = pg.Surface((60, 60), pg.SRCALPHA)
+        surf2.blit(bird, (0, y))
+        mask = pg.mask.from_surface(surf2)
+        surf2 = mask.to_surface(setcolor=color2, unsetcolor=(0, 0, 0, 0))
+
+        result = pg.Surface((60, 60), pg.SRCALPHA)
+        result.blit(surf1, (0, 0))
+        result.blit(surf2, (0, 0))
+        return result
+
 
 class Score:
     def __init__(self):
@@ -88,11 +114,11 @@ class Score:
         return points, bonus_points
 
     def kill(self, enemy):
-        if enemy.enemyType == 1:
+        if enemy.enemy_type == 1:
             self.score += 500
-        elif enemy.enemyType == 2:
+        elif enemy.enemy_type == 2:
             self.score += 750
-        elif enemy.enemyType == 3:
+        elif enemy.enemy_type == 3:
             self.score += 1000
 
     def die(self):
