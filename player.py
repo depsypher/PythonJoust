@@ -1,10 +1,15 @@
 import random
-import math
 import pygame as pg
 
 from enemy import Enemy
 from actors import Character
 
+WALK_ANIM_SPEED = {
+    1: 140,
+    2: 80,
+    3: 40,
+    4: 15
+}
 
 class Player(Character):
     def __init__(self, sprites, add_sprite, state):
@@ -79,11 +84,11 @@ class Player(Character):
             else:
                 slow = -1 if self.x_speed > 0 else 1
                 if self.skidding == 20:
-                    self.x_speed += slow * 3
+                    self.x_speed += slow
                 elif self.skidding == 10:
                     self.x_speed += slow * 2
                 elif self.skidding == 5:
-                    self.x_speed += slow
+                    self.x_speed += slow * 3
             self.skidding -= 1
         elif self.walking and ((self.x_speed > 3 and keys[pg.K_LEFT]) or (self.x_speed < -3 and keys[pg.K_RIGHT])):
             self.playerChannel.play(self.sounds["skid"])
@@ -132,77 +137,15 @@ class Player(Character):
             self.facing_right = self.x_speed > 0
 
         self.velocity()
-
-        if self.x < -48:
-            self.x = 900
-        if self.x > 900:
-            self.x = -48
+        self.wrap()
 
         self.rect.topleft = (self.x, self.y)
-
-        # check for enemy collision
-        for enemy in pg.sprite.spritecollide(self, enemies, False, pg.sprite.collide_mask):
-            if enemy.alive:
-                if self.y < enemy.y:
-                    enemy.killed(eggs, self.egg_images, self.chars_small, self, self.add_sprite, score)
-                    self.bounce(enemy)
-                    enemy.bounce(self)
-                elif self.y - 5 > enemy.y:
-                    self.bounce(enemy)
-                    enemy.bounce(self)
-                    if not god.on:
-                        score.reset()
-                        self.die(score)
-                    break
-                else:
-                    self.bounce(enemy)
-                    enemy.bounce(self)
-
-        collided = False
-        collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
-
-        for collidedPlatform in collided_platforms:
-            if self.y < 559:
-                collided = self.bounce(collidedPlatform)
-
-        if not collided:
-            self.walking = False
-            self.skidding = 0
-
-        if self.y > 559:
-            score.reset()
-            self.die(score)
-
-        collided_eggs = pg.sprite.spritecollide(self, eggs, False, pg.sprite.collide_mask)
-        for collided_egg in collided_eggs:
-            self.sounds["egg"].play(0)
-            bonus = collided_egg.bonus
-            points = score.collect_egg(bonus)[0]
-            badge = ScoreBadge(self.chars_small, collided_egg.x, collided_egg.y - 16, points, bonus)
-            self.add_sprite(None, badge)
-            self.score_badges.append(badge)
-            collided_egg.kill()
-
-        if self.walking:
-            if current_time > self.next_anim_time:
-                if self.x_speed != 0:
-                    if self.skidding > 0:
-                        self.frame = 4
-                    else:
-                        speed = abs(self.x_speed) * self.VEL[abs(math.floor(self.x_speed))]
-                        ms = (8.0 / speed) * 15
-                        self.next_anim_time = current_time + ms
-                        self.frame += 1
-                        if self.frame > 3:
-                            self.frame = 0
-                    if self.frame == 2:
-                        self.sounds["walk1"].play(0) if self.alternate_walk else self.sounds["walk2"].play(0)
-                        self.alternate_walk = not self.alternate_walk
-                else:
-                    self.frame = 3
-                    self.playerChannel.stop()
-
+        self.enemy_collision(eggs, enemies, god, score)
+        self.platform_collision(platforms, score)
+        self.egg_collision(eggs, score)
         self.rect.topleft = (self.x, self.y)
+
+        self.walk_animation(current_time)
         self.image = self.build_mount(self.mount)
 
         if not self.facing_right:
@@ -212,14 +155,12 @@ class Player(Character):
     def do_unmounted(self, current_time, platforms):
         # unmounted player, lone bird
         # see if we need to accelerate
-        if abs(self.x_speed) < self.targetXSpeed:
-            if abs(self.x_speed) > 0:
-                self.x_speed += self.x_speed / abs(self.x_speed) / 2
-            else:
-                self.x_speed += 0.5
-        # work out if flapping...
+        speed = abs(self.x_speed)
+        if speed < self.target_x_speed:
+            self.x_speed += 1 if self.x_speed > 0 else -1
+
         if self.flap < 1:
-            if random.randint(0, 10) > 8 or self.y > 450:  # flap to avoid lava
+            if random.randint(0, 10) > 9 or self.y > 450:  # flap to avoid lava
                 self.y_speed -= 3
                 self.flap = 3
         else:
@@ -227,34 +168,22 @@ class Player(Character):
 
         self.velocity()
 
-        if self.x < -48:  # off the left. remove entirely
+        if self.x < -52 or self.x > 898:  # off the screen. remove entirely
             self.image = self.unmounted_images[7]
             self.alive = "dead"
             self.next_update_time = current_time + 2000
-        if self.x > 900:  # off the right. remove entirely
-            self.image = self.unmounted_images[7]
-            self.alive = "dead"
-            self.next_update_time = current_time + 2000
-        self.rect.topleft = (self.x, self.y)
-
-        # check for platform collision
-        collided = False
-        collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
-
-        for collidedPlatform in collided_platforms:
-            collided = self.bounce(collidedPlatform)
-
-        if not collided:
-            self.walking = False
-
-        self.rect.topleft = (self.x, self.y)
-        self.animate(current_time)
-        self.image = self.unmounted_images[self.frame]
-        if self.x_speed < 0 or (self.x_speed == 0 and not self.facing_right):
-            self.image = pg.transform.flip(self.image, True, False)
-            self.facing_right = False
         else:
-            self.facing_right = True
+            self.rect.topleft = (self.x, self.y)
+            self.platform_collision(platforms)
+            self.rect.topleft = (self.x, self.y)
+
+            self.animate(current_time)
+            self.image = self.unmounted_images[self.frame]
+            if self.x_speed < 0 or (self.x_speed == 0 and not self.facing_right):
+                self.image = pg.transform.flip(self.image, True, False)
+                self.facing_right = False
+            else:
+                self.facing_right = True
 
     def bounce(self, collider):
         collided = False
@@ -314,6 +243,66 @@ class Player(Character):
                 self.x_speed = 3
 
         return collided
+
+    def enemy_collision(self, eggs, enemies, god, score):
+        for enemy in pg.sprite.spritecollide(self, enemies, False, pg.sprite.collide_mask):
+            if enemy.alive:
+                if self.y < enemy.y:
+                    enemy.killed(eggs, self.egg_images, self.chars_small, self, self.add_sprite, score)
+                    self.bounce(enemy)
+                    enemy.bounce(self)
+                elif self.y - 5 > enemy.y:
+                    self.bounce(enemy)
+                    enemy.bounce(self)
+                    if not god.on:
+                        score.reset()
+                        self.die(score)
+                    break
+                else:
+                    self.bounce(enemy)
+                    enemy.bounce(self)
+
+    def platform_collision(self, platforms, score=None):
+        collided = False
+        collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
+        for collidedPlatform in collided_platforms:
+            if self.y < 559:
+                collided = self.bounce(collidedPlatform)
+        if not collided:
+            self.walking = False
+            self.skidding = 0
+        if score and self.y > 559:
+            score.reset()
+            self.die(score)
+
+    def egg_collision(self, eggs, score):
+        collided_eggs = pg.sprite.spritecollide(self, eggs, False, pg.sprite.collide_mask)
+        for collided_egg in collided_eggs:
+            self.sounds["egg"].play(0)
+            bonus = collided_egg.bonus
+            points = score.collect_egg(bonus)[0]
+            badge = ScoreBadge(self.chars_small, collided_egg.x, collided_egg.y - 16, points, bonus)
+            self.add_sprite(None, badge)
+            self.score_badges.append(badge)
+            collided_egg.kill()
+
+    def walk_animation(self, current_time):
+        if self.walking:
+            if current_time > self.next_anim_time:
+                if self.x_speed != 0:
+                    if self.skidding > 0:
+                        self.frame = 4
+                    else:
+                        self.next_anim_time = current_time + WALK_ANIM_SPEED.get(abs(self.x_speed), 0)
+                        self.frame += 1
+                        if self.frame > 3:
+                            self.frame = 0
+                    if self.frame == 2:
+                        self.sounds["walk1"].play(0) if self.alternate_walk else self.sounds["walk2"].play(0)
+                        self.alternate_walk = not self.alternate_walk
+                else:
+                    self.frame = 3
+                    self.playerChannel.stop()
 
     def die(self, score):
         self.lives -= 1

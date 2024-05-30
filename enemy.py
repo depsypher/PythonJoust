@@ -14,6 +14,7 @@ class Enemy(Character):
             self.mount = sprites.bounder
         else:
             self.mount = sprites.hunter
+        self.alive = True
         self.spawn_images = sprites.spawn
         self.enemyType = enemy_type
         self.image = self.spawn_images[0]
@@ -21,33 +22,16 @@ class Enemy(Character):
         self.rect = self.image.get_rect()
         self.x = start_pos[0]
         self.y = start_pos[1]
-        self.x_speed = random.randint(3, 10)
+        self.x_speed = 1
+        self.target_x_speed = 3 if enemy_type == 0 else 4
         if random.randint(0, 1) < 1:
             self.x_speed = -self.x_speed
             self.facing_right = False
 
-        self.flapCount = 0
-        self.alive = True
-
-    def build_mount(self, buzzard, mount):
-        surf = pg.Surface((60, 60), pg.SRCALPHA)
-        surf.blit(mount, (18, 0))
-        surf.blit(buzzard, (0, 0))
-        self.mask = pg.mask.from_surface(surf)
-        return surf
-
-    def killed(self, eggs, egg_images, chars_small, killer, add_sprite, score):
-        egg_x_speed = (self.x_speed + killer.x_speed) * 0.5
-        egg_y_speed = (self.y_speed + killer.y_speed - 1) * 0.5
-        add_sprite(eggs, Egg(egg_images, chars_small, self.x + 27, self.y + 21, egg_x_speed, egg_y_speed))
-        score.kill(self)
-        self.alive = False
-
     def update(self, current_time, keys, platforms, enemies):
         if current_time < self.next_update_time:
             return
-
-        self.next_update_time = current_time + 50
+        self.next_update_time = current_time + 30
 
         if self.spawning:
             self.frame += 1
@@ -60,61 +44,32 @@ class Enemy(Character):
             if self.frame == 5:
                 self.spawning = False
         else:
-            # see if we need to accelerate
-            if abs(self.x_speed) < self.targetXSpeed:
-                self.x_speed += self.x_speed / abs(self.x_speed) / 2
+            speed = abs(self.x_speed)
+            if speed < self.target_x_speed:
+                self.x_speed += 1 if self.x_speed > 0 else -1
 
-            # work out if flapping...
-            if self.flap < 1:
-                if random.randint(0, 10) > 9 or self.y > 450:  # flap to avoid lava
-                    self.y_speed -= 3
-                    self.flap = 3
-            else:
-                self.flap -= 1
+            self.flap -= 1
+            if self.flap < -5 and random.randint(0, 10) > 8 or self.y > 450:  # flap to avoid lava
+                self.y_speed -= 4
+                self.flap = 10
 
+            self.walking = False
             self.velocity()
-
-            if self.x < -48:  # off the left. If enemy is dead then remove entirely
-                if self.alive:
-                    self.x = 900
-                else:
-                    self.kill()
-            if self.x > 900:  # off the right. If enemy is dead then remove entirely
-                if self.alive:
-                    self.x = -48
-                else:
-                    self.kill()
+            self.wrap(on_wrap=lambda: self.kill() if not self.alive else False)
 
             self.rect.topleft = (self.x, self.y)
+            self.bird_collision(enemies)
+            self.platform_collision(platforms)
+            self.rect.topleft = (self.x, self.y)
 
-            if self.alive:
-                self.image = self.build_mount(self.buzzard[self.frame], self.mount[0])
-            else:
-                self.image = self.buzzard[self.frame]
+            self.animate(current_time)
+            self.image = self.build_mount(self.buzzard[self.frame], self.mount[0])
 
             if self.x_speed < 0 or (self.x_speed == 0 and not self.facing_right):
                 self.image = pg.transform.flip(self.image, True, False)
                 self.facing_right = False
             else:
                 self.facing_right = True
-
-            for bird in pg.sprite.spritecollide(self, enemies, False, pg.sprite.collide_mask):
-                if bird is not self:
-                    self.bounce(bird)
-                    bird.bounce(self)
-
-            # check for platform collision
-            self.walking = False
-
-            collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
-
-            for collidedPlatform in collided_platforms:
-                self.bounce(collidedPlatform)
-                if self.y > 559:  # hit lava
-                    self.kill()
-
-            self.rect.topleft = (self.x, self.y)
-            self.animate(current_time)
 
     def bounce(self, collider):
         if collider.rect.left < self.rect.centerx < collider.rect.right and (
@@ -136,3 +91,33 @@ class Enemy(Character):
             # colliding from right side
             self.x += 3
             self.x_speed = 2
+
+    def platform_collision(self, platforms):
+        collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
+        for collidedPlatform in collided_platforms:
+            self.bounce(collidedPlatform)
+            if self.y > 559:  # hit lava
+                self.kill()
+
+    def bird_collision(self, enemies):
+        for bird in pg.sprite.spritecollide(self, enemies, False, pg.sprite.collide_mask):
+            if bird is not self:
+                self.bounce(bird)
+                bird.bounce(self)
+
+    def build_mount(self, buzzard, mount):
+        if self.alive:
+            surf = pg.Surface((60, 60), pg.SRCALPHA)
+            surf.blit(mount, (18, 0))
+            surf.blit(buzzard, (0, 0))
+            self.mask = pg.mask.from_surface(surf)
+            return surf
+        else:
+            return self.buzzard[self.frame]
+
+    def killed(self, eggs, egg_images, chars_small, killer, add_sprite, score):
+        egg_x_speed = (self.x_speed + killer.x_speed) * 0.5
+        egg_y_speed = (self.y_speed + killer.y_speed - 1) * 0.5
+        add_sprite(eggs, Egg(egg_images, chars_small, self.x + 27, self.y + 21, egg_x_speed, egg_y_speed))
+        score.kill(self)
+        self.alive = False

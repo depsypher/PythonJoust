@@ -13,7 +13,7 @@ class Character(pg.sprite.Sprite):
         1: 0.8,
         2: 0.8,
         3: 1.0,
-        4: 1.8
+        4: 1.7
     }
 
     def __init__(self):
@@ -26,7 +26,7 @@ class Character(pg.sprite.Sprite):
         self.frame = 0
         self.next_update_time = 0
         self.next_anim_time = 0
-        self.targetXSpeed = 8
+        self.target_x_speed = 8
         self.walking = True
         self.facing_right = True
         self.spawning = True
@@ -47,6 +47,16 @@ class Character(pg.sprite.Sprite):
             self.y = 0
             self.y_speed = 2
 
+    def wrap(self, on_wrap=None):
+        if self.x < -52:
+            self.x = 882
+            if on_wrap:
+                on_wrap()
+        if self.x > 898:
+            self.x = -45
+            if on_wrap:
+                on_wrap()
+
     def animate(self, current_time):
         if self.walking:
             if self.next_anim_time < current_time:
@@ -59,9 +69,9 @@ class Character(pg.sprite.Sprite):
                         self.frame = 3
         else:
             if self.flap > 0:
-                self.frame = 6
-            else:
                 self.frame = 5
+            else:
+                self.frame = 6
 
 
 class Score:
