@@ -21,7 +21,7 @@ clear_surface = screen.copy()
 
 
 async def main():
-    global state, enemies_spawning
+    global state, enemies_spawning, player1
 
     while state['running']:
         for event in pg.event.get():
@@ -40,12 +40,35 @@ async def main():
         on_key(keys, pg.K_k, lambda: player1.die(score))
         on_key(keys, pg.K_g, toggle_god_mode, (current_time, keys))
 
+        current_wave = state['wave']
+        waves = state['waves']
+
+        if player1.lives < 1:
+            if state['game_over'] == 0:
+                state['game_over'] = current_time
+            draw_text('THY GAME IS OVER', 285, 369, 1500, (240, 240, 240))
+            if current_time > state['game_over'] + 1000:
+                on_key(keys, pg.K_SPACE, toggle, 'restart')
+
+        if state['restart']:
+            score.clear()
+            player1 = Player(Sprites, add_sprite, state)
+            current_wave = 0
+            state['wave'] = 0
+            state['wave_start'] = current_time
+            state['game_over'] = 0
+            state['increment_wave'] = True
+            for wave_num in waves.keys():
+                for task_data in waves[wave_num]['tasks']:
+                    task_data['started'] = False
+
+            for enemy in enemies:
+                enemy.kill()
+            state['restart'] = False
+
         if (current_time > state['wave_start'] + 6000 and len(enemies_spawning) == 0
                 and len(enemies.sprites()) == 0 and len(eggs.sprites()) == 0):
             state['increment_wave'] = True
-
-        current_wave = state['wave']
-        waves = state['waves']
 
         if state['increment_wave']:
             score.reset()
@@ -225,6 +248,8 @@ state = {
     'wave': 0,
     'wave_start': 0,
     'increment_wave': True,
+    'game_over': 0,
+    'restart': False,
     'waves': {
         1: {
             'tasks': [

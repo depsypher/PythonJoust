@@ -132,6 +132,10 @@ class Score:
     def reset(self):
         self.eggs_collected = 0
 
+    def clear(self):
+        self.score = 0
+        self.eggs_collected = 0
+
     def draw(self, screen, digits):
         xpos = 210
         d = 10000000

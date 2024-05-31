@@ -78,7 +78,7 @@ class Player(Character):
             self.do_mounted(current_time, eggs, enemies, state['god'], keys, platforms, score)
         elif self.alive == "unmounted":
             self.do_unmounted(current_time, platforms)
-        else:
+        elif self.lives > 0:
             self.respawn()
 
     def do_mounted(self, current_time, eggs, enemies, god, keys, platforms, score):
