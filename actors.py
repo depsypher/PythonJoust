@@ -6,6 +6,13 @@ YELLOW = (255, 255, 85)
 GREY = (153, 153, 169)
 WHITE = (255, 255, 255)
 
+WALK_ANIM_SPEED = {
+    1: 140,
+    2: 80,
+    3: 40,
+    4: 15
+}
+
 
 class Character(pg.sprite.Sprite):
     MAX_X_SPEED = 4
@@ -66,12 +73,10 @@ class Character(pg.sprite.Sprite):
         if self.walking:
             if self.next_anim_time < current_time:
                 if self.x_speed != 0:
-                    self.next_anim_time = current_time + 100 / abs(self.x_speed)
+                    self.next_anim_time = current_time + WALK_ANIM_SPEED.get(abs(self.x_speed), 0)
                     self.frame += 1
                     if self.frame > 3:
                         self.frame = 0
-                    else:
-                        self.frame = 3
         else:
             if self.flap > 0:
                 self.frame = 5

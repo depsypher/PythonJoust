@@ -2,14 +2,7 @@ import random
 import pygame as pg
 
 from enemy import Enemy
-from actors import Character
-
-WALK_ANIM_SPEED = {
-    1: 140,
-    2: 80,
-    3: 40,
-    4: 15
-}
+from actors import Character, WALK_ANIM_SPEED
 
 
 class Player(Character):
@@ -30,11 +23,10 @@ class Player(Character):
         }
         self.unmounted_images = sprites.ostrich
         self.mount = sprites.p1mount
-        self.spawn_images = sprites.spawn
         self.egg_images = sprites.egg
         self.chars_small = sprites.chars_small
         self.poof_images = sprites.poof
-        self.image = self.spawn_images[0]
+        self.image = sprites.ostrich[0]
         self.mask = pg.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.frame = 2

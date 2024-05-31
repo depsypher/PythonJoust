@@ -20,9 +20,8 @@ class Enemy(Character):
             self.mount = sprites.hunter[0]
         self.alive = True
         self.spawning = 20
-        self.spawn_images = sprites.spawn
         self.enemy_type = enemy_type
-        self.image = self.spawn_images[0]
+        self.image = self.buzzard[0]
         self.mask = pg.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.x = start_pos[0]

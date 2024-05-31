@@ -188,7 +188,6 @@ class Sprites:
     buzzard = loader.load_sprite(191, 44, 20, 20, 3, 3, 7, sheet)
     bounder = loader.load_sprite(58, 69, 12, 7, 3, 0, 1, sheet)
     hunter = loader.load_sprite(73, 69, 12, 7, 3, 0, 1, sheet)
-    spawn = loader.load_sliced_sprites(60, 60, "resources/graphics/spawn1.png")
     egg = loader.load_sprite(140, 69, 9, 7, 3, 6, 4, sheet)
     poof = loader.load_sprite(414, 69, 11, 11, 3, 3, 3, sheet)
     flames = loader.load_sprite(1, 69, 8, 18, 3, 3, 4, sheet)
