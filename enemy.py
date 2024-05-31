@@ -62,6 +62,11 @@ class Enemy(Character):
             self.velocity()
             self.wrap(on_wrap=lambda: self.kill() if not self.alive else False)
 
+            # head to nearest edge of screen if dead
+            if not self.alive:
+                speed = abs(self.x_speed)
+                self.x_speed = -speed if self.x < 450 else speed
+
             self.rect.topleft = (self.x, self.y)
             self.bird_collision(enemies)
             self.platform_collision(platforms)
@@ -121,6 +126,7 @@ class Enemy(Character):
             return self.buzzard[self.frame]
 
     def killed(self, eggs, egg_images, chars_small, killer, add_sprite, score):
+        self.target_x_speed = 4
         egg_x_speed = (self.x_speed + killer.x_speed) * 0.5
         egg_y_speed = (self.y_speed + killer.y_speed - 1) * 0.5
         add_sprite(eggs, Egg(egg_images, chars_small, self.x + 27, self.y + 21, egg_x_speed, egg_y_speed))

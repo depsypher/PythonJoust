@@ -21,7 +21,7 @@ clear_surface = screen.copy()
 
 
 async def main():
-    global clock, screen, clear_surface, state, enemies, enemies_spawning
+    global state, enemies_spawning
 
     while state['running']:
         for event in pg.event.get():
@@ -32,6 +32,17 @@ async def main():
 
         delta = clock.tick(60) * 0.001
         current_time = pg.time.get_ticks()
+
+        keys = pg.key.get_pressed()
+        pg.event.clear()
+        on_key(keys, pg.K_ESCAPE, toggle, 'running')    # exit game
+        on_key(keys, pg.K_p, toggle, 'paused')
+        on_key(keys, pg.K_k, lambda: player1.die(score))
+        on_key(keys, pg.K_g, toggle_god_mode, (current_time, keys))
+
+        if (current_time > state['wave_start'] + 6000 and len(enemies_spawning) == 0
+                and len(enemies.sprites()) == 0 and len(eggs.sprites()) == 0):
+            state['increment_wave'] = True
 
         current_wave = state['wave']
         waves = state['waves']
@@ -61,32 +72,7 @@ async def main():
 
         all_sprites.clear(screen, clear_surface)
 
-        # make enemies
-        if current_time > state['next_spawn_time'] and len(enemies_spawning) > 0:
-            enemy_type = enemies_spawning[0]
-            generate_enemies(Sprites, enemies, spawn_points, enemy_type)
-            enemies_spawning.pop(0)
-            state['next_spawn_time'] = current_time + 1000
-
-        keys = pg.key.get_pressed()
-        pg.event.clear()
-
-        # If they have pressed Escape, close down Pygame
-        if keys[pg.K_ESCAPE]:
-            state['running'] = False
-
-        on_key(keys, pg.K_p, toggle_pause)
-        on_key(keys, pg.K_k, lambda: player1.die(score))
-
-        # check for God mode toggle
-        if keys[pg.K_g]:
-            state['god'].toggle(current_time)
-            if not state['god'].on:
-                screen.blit(clear_surface, (20, 20), (0, 0, 200, 20))
-
-        if (current_time > state['wave_start'] + 6000 and len(enemies_spawning) == 0
-                and len(enemies.sprites()) == 0 and len(eggs.sprites()) == 0):
-            state['increment_wave'] = True
+        generate_enemies(current_time, enemies_spawning)
 
         if not state['paused']:
             player.update(current_time, keys, platforms, enemies, eggs, score, state)
@@ -96,21 +82,9 @@ async def main():
             for message in messages:
                 message.update(current_time, lambda m: messages.remove(m))
 
-        if state['god'].on:
-            font = pg.font.SysFont(None, 24)
-            img = font.render(f'FPS: {clock.get_fps():3.4f}'
-                              f' x_speed: {player1.x_speed}', True, (0, 0, 255))
-            rect = img.get_rect().copy()
-            rect.width += 10
-            screen.blit(clear_surface, (20, 20), rect)
-            screen.blit(img, (20, 20))
-            add_sprite(god_sprite, state['god'])
-        else:
-            all_sprites.remove(god_sprite)
-
         sprite_rects = all_sprites.draw(screen)
-
-        draw_lives(player1.lives, screen, Sprites.life)
+        draw_god_mode()
+        draw_lives()
         score.draw(screen, Sprites.chars)
 
         pg.display.update(sprite_rects)
@@ -143,17 +117,22 @@ def draw_text(text, x, y, duration, color=None, wave=None):
     messages.append(message)
 
 
-def generate_enemies(sprites, enemies, spawn_points, enemy_type: int):
-    chosen = spawn_points.copy()
-    random.shuffle(chosen)
-    add_sprite(enemies, Enemy(sprites, chosen[0], enemy_type))
+def generate_enemies(current_time, spawning):
+    global state
+    if current_time > state['next_spawn_time'] and len(spawning) > 0:
+        enemy_type = spawning[0]
+        chosen = spawn_points.copy()
+        random.shuffle(chosen)
+        add_sprite(enemies, Enemy(Sprites, chosen[0], enemy_type))
+        spawning.pop(0)
+        state['next_spawn_time'] = current_time + 1000
 
 
-def draw_lives(lives, screen, life_image):
+def draw_lives():
     start_x = 330
-    for num in range(lives):
+    for num in range(player1.lives):
         x = start_x + num * 19
-        screen.blit(life_image, [x, 570])
+        screen.blit(Sprites.life, [x, 570])
 
 
 def set_spawning(*to_spawn):
@@ -162,22 +141,47 @@ def set_spawning(*to_spawn):
 
 
 def create_player():
-    global player1
     add_sprite(player, player1)
     player1.lives -= 1
 
 
-def on_key(keys, key, action):
+def on_key(keys, key, action, args=None):
     if keys[key]:
         if key not in state['keys_last_frame']:
-            action()
+            if isinstance(args, tuple):
+                action(*args)
+            elif args:
+                action(args)
+            else:
+                action()
         state['keys_last_frame'].append(key)
     elif key in state['keys_last_frame']:
         state['keys_last_frame'].remove(key)
 
 
-def toggle_pause():
-    state['paused'] = not state['paused']
+def toggle(val):
+    state[val] = not state[val]
+
+
+def toggle_god_mode(current_time, keys):
+    if keys[pg.K_g]:
+        state['god'].toggle(current_time)
+        if not state['god'].on:
+            screen.blit(clear_surface, (20, 20), (0, 0, 200, 20))
+
+
+def draw_god_mode():
+    if state['god'].on:
+        font = pg.font.SysFont(None, 24)
+        img = font.render(f'FPS: {clock.get_fps():3.4f}'
+                          f' x_speed: {player1.x_speed}', True, (0, 0, 255))
+        rect = img.get_rect().copy()
+        rect.width += 10
+        screen.blit(clear_surface, (20, 20), rect)
+        screen.blit(img, (20, 20))
+        add_sprite(god_sprite, state['god'])
+    else:
+        all_sprites.remove(god_sprite)
 
 
 class Sprites:

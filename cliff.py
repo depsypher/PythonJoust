@@ -1,6 +1,7 @@
 import pygame as pg
 import random
 
+
 class Cliff(pg.sprite.Sprite):
     def __init__(self, image, x, y, flames=None):
         pg.sprite.Sprite.__init__(self)
