@@ -8,11 +8,13 @@ I made it playable online using pygbag for wasm conversion:
 
 https://depsypher.github.io/PythonJoust/
 
+Controls are left, right and space to flap.
+
 ### Roadmap:
 - [ ] Wave 1 (buzzard bait)
 - [x] More or less authentic movement physics
 - [x] First stage needs bottom platform
-- [ ] Lava animates
+- [x] Lava animates
 - [x] Show scoring when collecting eggs
 - [ ] Make eggs hatch
 - [ ] Smarter enemies

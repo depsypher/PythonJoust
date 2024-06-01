@@ -18,10 +18,11 @@ window = pg.display.set_mode((900, 650))
 clock = pg.time.Clock()
 screen = pg.display.get_surface()
 clear_surface = screen.copy()
+delta = 0
 
 
 async def main():
-    global state, enemies_spawning, player1
+    global delta, state, enemies_spawning, player1
 
     while state['running']:
         for event in pg.event.get():
@@ -30,7 +31,6 @@ async def main():
                 # sys.exit()
                 return
 
-        delta = clock.tick(60) * 0.001
         current_time = pg.time.get_ticks()
 
         keys = pg.key.get_pressed()
@@ -98,10 +98,10 @@ async def main():
         generate_enemies(current_time, enemies_spawning)
 
         if not state['paused']:
-            player.update(current_time, keys, platforms, enemies, eggs, score, state)
+            player.update(current_time, delta, keys, platforms, enemies, eggs, score, state)
             platforms.update(current_time)
-            enemies.update(current_time, keys, platforms, enemies)
-            eggs.update(current_time, platforms)
+            enemies.update(current_time, delta, platforms, enemies)
+            eggs.update(current_time, delta, platforms)
             for message in messages:
                 message.update(current_time, lambda m: messages.remove(m))
 
@@ -111,6 +111,7 @@ async def main():
         score.draw(screen, Sprites.chars)
 
         pg.display.update(sprite_rects)
+        delta = clock.tick(60) / 1000
 
         await asyncio.sleep(0)
 

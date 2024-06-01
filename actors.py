@@ -16,16 +16,16 @@ WALK_ANIM_SPEED = {
 
 class Character(pg.sprite.Sprite):
     MAX_X_SPEED = 4
-    MAX_RISING_SPEED = -6
-    MAX_FALLING_SPEED = 10
-    GRAVITY = 0.2
+    MAX_RISING_SPEED = -360
+    MAX_FALLING_SPEED = 600
+    GRAVITY = 650
 
     VEL = {
-        0: 0.8,
-        1: 0.8,
-        2: 0.8,
-        3: 1.0,
-        4: 1.7
+        0: 48,
+        1: 48,
+        2: 48,
+        3: 60,
+        4: 102,
     }
 
     def __init__(self):
@@ -43,17 +43,17 @@ class Character(pg.sprite.Sprite):
         self.facing_right = True
         self.spawning = 0
 
-    def velocity(self):
+    def velocity(self, delta):
         if not self.walking:
-            self.y_speed += self.GRAVITY
+            self.y_speed += self.GRAVITY * delta
 
         self.x_speed = max(self.x_speed, -self.MAX_X_SPEED)
         self.x_speed = min(self.x_speed, self.MAX_X_SPEED)
         self.y_speed = max(self.y_speed, self.MAX_RISING_SPEED)
         self.y_speed = min(self.y_speed, self.MAX_FALLING_SPEED)
 
-        self.x += (self.x_speed * self.VEL[abs(math.floor(self.x_speed))])
-        self.y += (self.y_speed * .6)
+        self.x += (self.x_speed * self.VEL[abs(math.floor(self.x_speed))]) * delta
+        self.y += (self.y_speed * .6) * delta
 
         if self.y < 0:  # can't go off the top
             self.y = 0

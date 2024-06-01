@@ -4,6 +4,8 @@ import pygame as pg
 from enemy import Enemy
 from actors import Character, WALK_ANIM_SPEED
 
+SKID_MS = 500
+
 
 class Player(Character):
     def __init__(self, sprites, add_sprite, state):
@@ -33,7 +35,7 @@ class Player(Character):
         self.flap = 0
         self.lives = 5
         self.alive = "mounted"
-        self.skidding = 0
+        self.skidding = None
         self.x = 290
         self.y = 491
         self.next_accel_time = 0
@@ -43,7 +45,7 @@ class Player(Character):
         self.score_badges = []
         self.state = state
 
-    def update(self, current_time, keys, platforms, enemies, eggs, score, state):
+    def update(self, current_time, delta, keys, platforms, enemies, eggs, score, state):
         if self.poof is not None and self.poof.alive():
             self.poof.update(current_time)
 
@@ -70,35 +72,35 @@ class Player(Character):
                 if keys[pg.K_LEFT] or keys[pg.K_RIGHT] or keys[pg.K_SPACE]:
                     self.audio_channel.stop()
                     self.alive = "mounted"
-                    self.do_mounted(current_time, eggs, enemies, state['god'], keys, platforms, score)
+                    self.do_mounted(current_time, delta, eggs, enemies, state['god'], keys, platforms, score)
             else:
                 self.alive = "mounted"
-                self.do_mounted(current_time, eggs, enemies, state['god'], keys, platforms, score)
+                self.do_mounted(current_time, delta, eggs, enemies, state['god'], keys, platforms, score)
         elif self.alive == "mounted":
-            self.do_mounted(current_time, eggs, enemies, state['god'], keys, platforms, score)
+            self.do_mounted(current_time, delta, eggs, enemies, state['god'], keys, platforms, score)
         elif self.alive == "unmounted":
-            self.do_unmounted(current_time, platforms)
+            self.do_unmounted(current_time, delta, platforms)
         elif self.lives > 0:
             self.respawn()
 
-    def do_mounted(self, current_time, eggs, enemies, god, keys, platforms, score):
-        if self.skidding > 0:
-            if self.skidding == 1:
+    def do_mounted(self, current_time, delta, eggs, enemies, god, keys, platforms, score):
+        if self.skidding is not None:
+            skidding = self.skidding - current_time
+            if skidding <= 0:
                 self.x_speed = 0
                 self.next_accel_time = current_time + 400
-            else:
-                slow = -1 if self.x_speed > 0 else 1
-                if self.skidding == 20:
-                    self.x_speed += slow
-                elif self.skidding == 10:
-                    self.x_speed += slow * 2
-                elif self.skidding == 5:
-                    self.x_speed += slow * 3
-            self.skidding -= 1
+                self.skidding = None
+            elif self.x_speed != 0:
+                if skidding < SKID_MS / 2:
+                    self.x_speed = 2 if self.x_speed > 0 else -2
+                elif skidding < SKID_MS / 4:
+                    self.x_speed = 3 if self.x_speed > 0 else -3
+                else:
+                    self.x_speed = 4 if self.x_speed > 0 else -4
         elif self.walking and ((self.x_speed > 3 and keys[pg.K_LEFT]) or (self.x_speed < -3 and keys[pg.K_RIGHT])):
             self.audio_channel.play(self.sounds["skid"])
             self.frame = 4
-            self.skidding = 30
+            self.skidding = current_time + SKID_MS
         elif keys[pg.K_LEFT]:
             if self.walking:
                 if current_time > self.next_accel_time:
@@ -115,7 +117,7 @@ class Player(Character):
                 self.facing_right = True
 
         if keys[pg.K_SPACE]:
-            self.skidding = 0
+            self.skidding = None
             self.walking = False
 
             if self.flap == 0:
@@ -126,7 +128,7 @@ class Player(Character):
                     self.next_accel_time = current_time + 120
                     self.x_speed += 1
 
-                self.y_speed -= 3
+                self.y_speed -= 180
                 self.audio_channel.stop()
                 self.sounds["flap_dn"].play(0)
                 self.flap = 2
@@ -141,7 +143,7 @@ class Player(Character):
         if self.walking and self.x_speed != 0:
             self.facing_right = self.x_speed > 0
 
-        self.velocity()
+        self.velocity(delta)
         self.wrap()
 
         self.rect.topleft = (self.x, self.y)
@@ -157,7 +159,7 @@ class Player(Character):
             self.image = pg.transform.flip(self.image, True, False)
             self.mask = pg.mask.from_surface(self.image)
 
-    def do_unmounted(self, current_time, platforms):
+    def do_unmounted(self, current_time, delta, platforms):
         # unmounted player, lone bird
         # see if we need to accelerate
         speed = abs(self.x_speed)
@@ -166,12 +168,12 @@ class Player(Character):
 
         if self.flap < 1:
             if random.randint(0, 10) > 9 or self.y > 450:  # flap to avoid lava
-                self.y_speed -= 3
+                self.y_speed -= 3 / delta
                 self.flap = 3
         else:
             self.flap -= 1
 
-        self.velocity()
+        self.velocity(delta)
 
         if self.x < -52 or self.x > 898:  # off the screen. remove entirely
             self.image = self.unmounted_images[7]
@@ -275,7 +277,7 @@ class Player(Character):
                 collided = self.bounce(collidedPlatform)
         if not collided:
             self.walking = False
-            self.skidding = 0
+            self.skidding = None
         if score and self.y > 559:
             score.reset()
             self.die(score)
@@ -295,7 +297,7 @@ class Player(Character):
         if self.walking:
             if current_time > self.next_anim_time:
                 if self.x_speed != 0:
-                    if self.skidding > 0:
+                    if self.skidding is not None:
                         self.frame = 4
                     else:
                         self.next_anim_time = current_time + WALK_ANIM_SPEED.get(abs(self.x_speed), 0)
@@ -328,7 +330,7 @@ class Player(Character):
         self.y_speed = 0
         self.flap = 0
         self.walking = True
-        self.skidding = False
+        self.skidding = None
         self.alive = "spawning"
 
     def build_mount(self, mount):

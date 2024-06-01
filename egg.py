@@ -16,34 +16,21 @@ class Egg(actors.Character):
         self.x_speed = x_speed
         self.y_speed = y_speed
         self.rect.topleft = (x, y)
+        self.walking = False
         self.bonus = True   # until it hits a platform
 
-    def update(self, current_time, platforms):
-        self.y_speed += self.GRAVITY
-        if self.y_speed > self.MAX_FALLING_SPEED:
-            self.y_speed = self.MAX_FALLING_SPEED
-
-        self.x += self.x_speed
-        self.y += self.y_speed * 0.3
+    def update(self, current_time, delta, platforms):
+        self.velocity(delta)
+        self.wrap()
+        self.rect.topleft = (self.x, self.y)
+        collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
+        for collidedPlatform in collided_platforms:
+            self.bonus = False
+            self.bounce(collidedPlatform)
 
         if self.y > 570:  # hit lava
             self.kill()
-
         self.rect.topleft = (self.x, self.y)
-        if (((40 < self.y < 45) or (250 < self.y < 255)) and (
-                self.x < 0 or self.x > 860)):  # catch when it is rolling between screens
-            self.y_speed = 0
-        else:
-            collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
-            for collidedPlatform in collided_platforms:
-                self.bonus = False
-                self.bounce(collidedPlatform)
-
-        # wrap round screens
-        if self.x < -48:
-            self.x = 900
-        if self.x > 900:
-            self.x = -48
 
     def bounce(self, collider):
         if self.y < collider.y and ((collider.x - 40) < self.x < (collider.rect.right - 10)):

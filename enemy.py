@@ -28,14 +28,15 @@ class Enemy(Character):
         self.y = start_pos[1]
         self.x_speed = 1
         self.target_x_speed = 3 if enemy_type == 0 else 4
+        self.next_flap = 0
         if random.randint(0, 1) < 1:
             self.x_speed = -self.x_speed
             self.facing_right = False
 
-    def update(self, current_time, keys, platforms, enemies):
-        if current_time < self.next_update_time:
-            return
-        self.next_update_time = current_time + 30
+    def update(self, current_time, delta, platforms, enemies):
+        # if current_time < self.next_update_time:
+        #     return
+        # self.next_update_time = current_time + 30
 
         if self.spawning >= 0:
             if self.spawning == 20:
@@ -53,13 +54,15 @@ class Enemy(Character):
             if speed < self.target_x_speed:
                 self.x_speed += 1 if self.x_speed > 0 else -1
 
+            # flap occasionally and to avoid lava
             self.flap -= 1
-            if self.flap < -5 and random.randint(0, 10) > 8 or self.y > 450:  # flap to avoid lava
-                self.y_speed -= 4
-                self.flap = 10
+            if current_time > self.next_flap and random.randint(0, 10) > 5 or self.y > 450:
+                self.y_speed -= 180
+                self.next_flap = current_time + 250
+                self.flap = 5
 
             self.walking = False
-            self.velocity()
+            self.velocity(delta)
             self.wrap(on_wrap=lambda: self.kill() if not self.alive else False)
 
             # head to nearest edge of screen if dead
