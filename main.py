@@ -5,7 +5,7 @@ import pygame as pg
 import random
 import loader
 
-from util import SPAWN_POINTS, wrapped_distance
+from util import SPAWN_POINTS, wrapped_distance, LANES
 from enemy import Enemy
 from message import Message
 from player import Player
@@ -110,6 +110,11 @@ async def main():
         draw_god_mode()
         draw_lives()
         score.draw(screen, Sprites.chars)
+
+        # for debugging
+        # for lane in LANES:
+        #     lava_rect = [0, lane, 900, 1]
+        #     pg.draw.rect(screen, (255, 0, 0), lava_rect)
 
         pg.display.update(sprite_rects)
         delta = clock.tick(60) / 1000
@@ -228,7 +233,7 @@ class Sprites:
     c2 = Cliff(loader.load_image(385, 0, 64, 8, 3, sheet), 315, 420)     # mid-bottom
     c3 = Cliff(loader.load_image(82, 0, 88, 9, 3, sheet), 250, 201)      # mid-top
     c4 = Cliff(loader.load_image(0, 9, 50, 7, 3, sheet), -60, 168)          # top-left
-    c5 = Cliff(loader.load_image(0, 0, 64, 7, 3, sheet), 759, 168)      # top-right
+    c5 = Cliff(loader.load_image(0, 0, 64, 7, 3, sheet), 759, 168)       # top-right
     c6 = Cliff(loader.load_image(173, 0, 80, 8, 3, sheet), -50, 354)        # bottom-left
     c7 = Cliff(loader.load_image(319, 0, 63, 7, 3, sheet), 770, 354)     # bottom-right
     c8 = Cliff(loader.load_image(254, 0, 58, 11, 3, sheet), 606, 330)    # mid-right

@@ -1,7 +1,9 @@
 import random
+import sys
 
 import pygame as pg
 
+from util import LANES, wrapped_distance
 from egg import Egg
 from actors import Character
 
@@ -52,7 +54,7 @@ class Enemy(Character):
 
             # flap occasionally and to avoid lava
             self.flap -= 1
-            if current_time > self.next_flap and random.randint(0, 10) > 5 or self.y > 450:
+            if self.should_flap(current_time):
                 self.y_speed -= 180
                 self.next_flap = current_time + 250
                 self.flap = 5
@@ -100,6 +102,20 @@ class Enemy(Character):
             # colliding from right side
             self.x += 3
             self.x_speed = 2
+
+    def should_flap(self, current_time):
+        if current_time < self.next_flap:
+            return False
+        if self.y > 540:
+            return True
+
+        nearest_lane = (LANES[0], sys.maxsize)
+        for lane in LANES:
+            d = pg.math.Vector2(self.x, self.y).distance_to((self.x, lane))
+            if d < nearest_lane[1]:
+                nearest_lane = (lane, d)
+
+        return self.y > nearest_lane[0]
 
     def platform_collision(self, platforms):
         collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)

@@ -30,7 +30,7 @@ class Character(pg.sprite.Sprite):
 
     def __init__(self):
         pg.sprite.Sprite.__init__(self)
-        self.x = 389
+        self.x = 290
         self.y = 491
         self.x_speed = 0
         self.y_speed = 0

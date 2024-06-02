@@ -8,6 +8,8 @@ SPAWN_POINTS = [
     [48, 294],      # left
 ]
 
+LANES = [84, 260, 470]
+
 
 def wrapped_distance(x1, y1, x2, y2, width):
     """

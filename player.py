@@ -14,15 +14,15 @@ class Player(Character):
         super().__init__()
         self.audio_channel = pg.mixer.Channel(0)
         self.sounds = {
-            "walk1": pg.mixer.Sound("resources/sound/walk1.ogg"),
-            "walk2": pg.mixer.Sound("resources/sound/walk2.ogg"),
-            "flap_up": pg.mixer.Sound("resources/sound/flap-up.ogg"),
-            "flap_dn": pg.mixer.Sound("resources/sound/flap-dn.ogg"),
-            "skid": pg.mixer.Sound("resources/sound/skid.ogg"),
-            "bump": pg.mixer.Sound("resources/sound/bump.ogg"),
-            "hit": pg.mixer.Sound("resources/sound/hit.ogg"),
-            "egg": pg.mixer.Sound("resources/sound/egg.ogg"),
-            "spawn": pg.mixer.Sound("resources/sound/spawn.ogg"),
+            "walk1":    pg.mixer.Sound("resources/sound/walk1.ogg"),
+            "walk2":    pg.mixer.Sound("resources/sound/walk2.ogg"),
+            "flap_up":  pg.mixer.Sound("resources/sound/flap-up.ogg"),
+            "flap_dn":  pg.mixer.Sound("resources/sound/flap-dn.ogg"),
+            "skid":     pg.mixer.Sound("resources/sound/skid.ogg"),
+            "bump":     pg.mixer.Sound("resources/sound/bump.ogg"),
+            "hit":      pg.mixer.Sound("resources/sound/hit.ogg"),
+            "egg":      pg.mixer.Sound("resources/sound/egg.ogg"),
+            "spawn":    pg.mixer.Sound("resources/sound/spawn.ogg"),
             "energize": pg.mixer.Sound("resources/sound/energize.ogg"),
         }
         self.unmounted_images = sprites.ostrich
@@ -38,8 +38,6 @@ class Player(Character):
         self.lives = 5
         self.alive = "mounted"
         self.skidding = None
-        self.x = 290
-        self.y = 491
         self.next_accel_time = 0
         self.add_sprite = add_sprite
         self.alternate_walk = False
@@ -206,7 +204,7 @@ class Player(Character):
                 collider.rect.centery > self.rect.centery):
             # coming in from the top?
             if enemy:
-                self.y_speed = max(-self.y_speed, -6)
+                self.y_speed = max(-self.y_speed, -200)
                 self.y = collider.y - 25
                 self.audio_channel.play(self.sounds["hit"])
             else:
@@ -233,7 +231,7 @@ class Player(Character):
             collided = True
             if enemy:
                 self.audio_channel.play(self.sounds["hit"])
-                self.y_speed = max(-self.y_speed, -3)
+                self.y_speed = max(-self.y_speed, -200)
                 self.x_speed = max(-self.x_speed, -3)
             elif self.rect.bottom > collider.rect.bottom:
                 self.audio_channel.play(self.sounds["bump"])
@@ -244,7 +242,7 @@ class Player(Character):
             collided = True
             if enemy:
                 self.audio_channel.play(self.sounds["hit"])
-                self.y_speed = max(-self.y_speed, -3)
+                self.y_speed = max(-self.y_speed, -200)
                 self.x_speed = min(-self.x_speed, 3)
             elif self.rect.bottom > collider.rect.bottom:
                 self.audio_channel.play(self.sounds["bump"])
@@ -362,7 +360,7 @@ def choose_spawn_point(enemies):
             d = wrapped_distance(enemy.x, enemy.y, location[0], location[1], 900)
             if d < closest_enemy:
                 closest_enemy = d
-        # best is farthest location from enemy
+        # best is the farthest location from enemy
         if not best or best[1] < closest_enemy:
             best = (location, closest_enemy)
 
