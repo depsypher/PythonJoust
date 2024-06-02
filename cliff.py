@@ -1,5 +1,9 @@
 import pygame as pg
 import random
+from loader import load_sprite
+
+RED = (255, 0, 0)
+BROWN = (141, 73, 23)
 
 
 class Cliff(pg.sprite.Sprite):
@@ -16,7 +20,7 @@ class Cliff(pg.sprite.Sprite):
             self.mask = pg.mask.from_surface(self.image)
         else:
             self.lava_bubble = (-1, 0)
-            self.bottom_cliff = pg.image.load("resources/graphics/plat1.png")
+            self.bottom_cliff = load_sprite(0, 19, 190, 30, 3, 0, 1, "resources/graphics/spritesheet.png")[0]
             self.build_bottom_cliff(0)
 
         self.rect = self.image.get_rect()
@@ -29,37 +33,39 @@ class Cliff(pg.sprite.Sprite):
         surf = pg.Surface((1020, 98), pg.SRCALPHA)
 
         if self.burning != -2:
+            cliff_left = 217
             width = 227 - (227 * self.burning / 100)
-            pg.draw.rect(surf, (141, 73, 23), pg.Rect(217 - width, 0, width, 9))
+            pg.draw.rect(surf, BROWN, pg.Rect(cliff_left - width, 0, width, 9))
             if self.burning > 100:
-                surf.blit(self.flames[self.burning % 4], (217 - 18, 2 * (self.burning - 100)))
+                surf.blit(self.flames[self.burning % 4], (cliff_left - 18, 2 * (self.burning - 100)))
             elif self.burning < 100:
-                surf.blit(self.flames[self.burning % 4], (217 - width - 18, 0))
+                surf.blit(self.flames[self.burning % 4], (cliff_left - width - 18, 0))
 
+            cliff_right = 780
             width = 276 - (276 * self.burning / 100)
-            pg.draw.rect(surf, (141, 73, 23), pg.Rect(774, 0, width, 9))
+            pg.draw.rect(surf, BROWN, pg.Rect(cliff_right, 0, width, 9))
             if self.burning > 100:
-                surf.blit(self.flames[self.burning % 4], (774 - 12, 2 * (self.burning - 100)))
+                surf.blit(self.flames[self.burning % 4], (cliff_right - 12, 2 * (self.burning - 100)))
             elif self.burning < 100:
-                surf.blit(self.flames[self.burning % 4], (774 + width - 12, 0))
+                surf.blit(self.flames[self.burning % 4], (cliff_right + width - 12, 0))
 
         lava_height = min(age / 100, 50)
         lava_rect = [60, 98 - lava_height, 900, lava_height]
-        pg.draw.rect(surf, (255, 0, 0), lava_rect)
+        pg.draw.rect(surf, RED, lava_rect)
 
         lava_bubble_index = self.lava_bubble[0]
         if lava_bubble_index >= 0:
             x = self.lava_bubble[1]
             y = (98 - lava_height - 3) + 3 * lava_bubble_index
             if lava_bubble_index == 0:
-                pg.draw.rect(surf, (255, 0, 0), [x - 6, y, 6, 3])
-                pg.draw.rect(surf, (255, 0, 0), [x + 6, y, 6, 3])
+                pg.draw.rect(surf, RED, [x - 6, y, 6, 3])
+                pg.draw.rect(surf, RED, [x + 6, y, 6, 3])
             else:
-                pg.draw.rect(surf, (255, 0, 0), [x, y - 3, 6, 3])
+                pg.draw.rect(surf, RED, [x, y - 3, 6, 3])
                 pg.draw.rect(surf, (0, 0, 0), [x, y, 6, 3])
             self.lava_bubble = (self.lava_bubble[0] - 1, self.lava_bubble[1])
 
-        surf.blit(self.bottom_cliff, (216, 0))
+        surf.blit(self.bottom_cliff, (210, 0))
 
         self.mask = pg.mask.from_surface(surf)
         self.image = surf

@@ -218,7 +218,7 @@ def draw_god_mode():
 
 class Sprites:
     sheet = "resources/graphics/spritesheet.png"
-    life = pg.image.load("resources/graphics/life.png").convert_alpha()
+    life = loader.load_image(89, 79, 6, 7, 3, sheet)
     p1mount = loader.load_image(58, 79, 12, 7, 3, sheet)
     ostrich = loader.load_sprite(348, 19, 16, 20, 3, 5, 8, sheet)
     buzzard = loader.load_sprite(191, 44, 20, 20, 3, 3, 7, sheet)
