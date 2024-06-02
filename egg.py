@@ -19,14 +19,25 @@ class Egg(actors.Character):
         self.walking = False
         self.bonus = True   # until it hits a platform
 
-    def update(self, current_time, delta, platforms):
+    def update(self, current_time, delta, platforms, eggs):
         self.velocity(delta)
         self.wrap()
         self.rect.topleft = (self.x, self.y)
+
         collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
         for collidedPlatform in collided_platforms:
             self.bonus = False
             self.bounce(collidedPlatform)
+
+        for collided_egg in pg.sprite.spritecollide(self, eggs, False, pg.sprite.collide_mask):
+            if collided_egg is not self:
+                self.bounce(collided_egg)
+
+        if -0.1 < self.x_speed < 0.1:
+            if 890 <= self.x <= 1020:
+                self.x_speed -= 1
+            elif -100 <= self.x <= 0:
+                self.x_speed += 1
 
         if self.y > 570:  # hit lava
             self.kill()
@@ -35,8 +46,8 @@ class Egg(actors.Character):
     def bounce(self, collider):
         if self.y < collider.y and ((collider.x - 40) < self.x < (collider.rect.right - 10)):
             # egg is above collider
-            self.x_speed *= 0.5
-            self.y_speed = -abs(self.y_speed) * 0.25
+            self.x_speed *= 0.75
+            self.y_speed = -abs(self.y_speed) * 0.5
             self.y = collider.y - self.rect.height + 1
         elif self.x < collider.x:
             # egg is left of collider

@@ -102,7 +102,7 @@ async def main():
             player.update(current_time, delta, keys, platforms, enemies, eggs, score, state)
             platforms.update(current_time)
             enemies.update(current_time, delta, platforms, enemies)
-            eggs.update(current_time, delta, platforms)
+            eggs.update(current_time, delta, platforms, eggs)
             for message in messages:
                 message.update(current_time, lambda m: messages.remove(m))
 
