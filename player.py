@@ -1,6 +1,8 @@
 import random
+import sys
 import pygame as pg
 
+from util import SPAWN_POINTS, wrapped_distance
 from enemy import Enemy
 from actors import Character, WALK_ANIM_SPEED
 
@@ -81,7 +83,7 @@ class Player(Character):
         elif self.alive == "unmounted":
             self.do_unmounted(current_time, delta, platforms)
         elif self.lives > 0:
-            self.respawn()
+            self.respawn(enemies)
 
     def do_mounted(self, current_time, delta, eggs, enemies, god, keys, platforms, score):
         if self.skidding is not None:
@@ -319,10 +321,11 @@ class Player(Character):
         self.add_sprite(None, self.poof)
         score.die()
 
-    def respawn(self):
+    def respawn(self, enemies):
         self.frame = 1
-        self.x = 376
-        self.y = 492
+        location = choose_spawn_point(enemies)
+        self.x = location[0]
+        self.y = location[1]
         self.rect = self.image.get_rect()
         self.rect.topleft = (self.x, self.y)
         self.facing_right = True
@@ -347,6 +350,23 @@ class Player(Character):
         self.mask = pg.mask.from_surface(surf)
         #        return self.mask.to_surface(setcolor=(255, 0, 0))  # show mask for debugging
         return surf
+
+
+def choose_spawn_point(enemies):
+    locations = SPAWN_POINTS.copy()
+
+    best = None
+    for location in locations:
+        closest_enemy = sys.maxsize
+        for enemy in enemies:
+            d = wrapped_distance(enemy.x, enemy.y, location[0], location[1], 900)
+            if d < closest_enemy:
+                closest_enemy = d
+        # best is farthest location from enemy
+        if not best or best[1] < closest_enemy:
+            best = (location, closest_enemy)
+
+    return best[0]
 
 
 class Poof(pg.sprite.Sprite):

@@ -5,6 +5,7 @@ import pygame as pg
 import random
 import loader
 
+from util import SPAWN_POINTS, wrapped_distance
 from enemy import Enemy
 from message import Message
 from player import Player
@@ -145,9 +146,11 @@ def generate_enemies(current_time, spawning):
     global state
     if current_time > state['next_spawn_time'] and len(spawning) > 0:
         enemy_type = spawning[0]
-        chosen = spawn_points.copy()
-        random.shuffle(chosen)
-        add_sprite(enemies, Enemy(Sprites, chosen[0], enemy_type))
+        choices = SPAWN_POINTS.copy()
+        choices.sort(key=lambda c: wrapped_distance(c[0], c[1], player1.x, player1.y, 900))
+        choices = choices[-3:]
+        random.shuffle(choices)
+        add_sprite(enemies, Enemy(Sprites, choices[0], enemy_type))
         spawning.pop(0)
         state['next_spawn_time'] = current_time + 1000
 
@@ -230,14 +233,6 @@ class Sprites:
     c7 = Cliff(loader.load_image(319, 0, 63, 7, 3, sheet), 770, 354)     # bottom-right
     c8 = Cliff(loader.load_image(254, 0, 58, 11, 3, sheet), 606, 330)    # mid-right
     platforms = [c1, c2, c3, c4, c5, c6, c7, c8]
-
-
-spawn_points = [
-    [690, 270],     # right
-    [376, 492],     # bottom
-    [327, 141],     # top
-    [48, 294],      # left
-]
 
 
 state = {

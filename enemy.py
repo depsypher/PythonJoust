@@ -34,10 +34,6 @@ class Enemy(Character):
             self.facing_right = False
 
     def update(self, current_time, delta, platforms, enemies):
-        # if current_time < self.next_update_time:
-        #     return
-        # self.next_update_time = current_time + 30
-
         if self.spawning >= 0:
             if self.spawning == 20:
                 self.audio_channel.stop()
