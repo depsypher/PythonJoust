@@ -38,6 +38,7 @@ async def main():
         pg.event.clear()
         on_key(keys, pg.K_ESCAPE, toggle, 'running')    # exit game
         on_key(keys, pg.K_p, toggle, 'paused')
+        on_key(keys, pg.K_s, toggle, 'sound')
         on_key(keys, pg.K_k, lambda: player1.die(score))
         on_key(keys, pg.K_g, toggle_god_mode, (current_time, keys))
 
@@ -101,7 +102,7 @@ async def main():
         if not state['paused']:
             player.update(current_time, delta, keys, platforms, enemies, eggs, score, state)
             platforms.update(current_time)
-            enemies.update(current_time, delta, platforms, enemies)
+            enemies.update(current_time, delta, platforms, enemies, state)
             eggs.update(current_time, delta, platforms, eggs)
             for message in messages:
                 message.update(current_time, lambda m: messages.remove(m))
@@ -224,7 +225,8 @@ class Sprites:
     buzzard = loader.load_sprite(191, 44, 20, 20, 3, 3, 7, sheet)
     bounder = loader.load_sprite(58, 69, 12, 7, 3, 0, 1, sheet)
     hunter = loader.load_sprite(73, 69, 12, 7, 3, 0, 1, sheet)
-    egg = loader.load_sprite(140, 69, 9, 7, 3, 6, 4, sheet)
+    egg = loader.load_sprite(140, 69, 9, 7, 3, 3, 4, sheet)
+    hatchling = loader.load_sprite(0, 53, 18, 12, 3, 5, 5, sheet)
     poof = loader.load_sprite(414, 69, 11, 11, 3, 3, 3, sheet)
     flames = loader.load_sprite(1, 69, 8, 18, 3, 3, 4, sheet)
     chars = loader.load_sprite(1, 93, 11, 7, 3, 0, 50, sheet)
@@ -243,6 +245,7 @@ class Sprites:
 state = {
     'running': True,
     'paused':  False,
+    'sound':  True,
     'god': GodMode(),
     'keys_last_frame': [],
     'next_spawn_time': 0,

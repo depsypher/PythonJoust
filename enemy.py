@@ -3,7 +3,7 @@ import sys
 
 import pygame as pg
 
-from util import LANES, wrapped_distance
+from util import LANES, play_sound
 from egg import Egg
 from actors import Character
 
@@ -35,11 +35,11 @@ class Enemy(Character):
             self.x_speed = -self.x_speed
             self.facing_right = False
 
-    def update(self, current_time, delta, platforms, enemies):
+    def update(self, current_time, delta, platforms, enemies, state):
         if self.spawning >= 0:
             if self.spawning == 20:
                 self.audio_channel.stop()
-                self.audio_channel.play(self.sounds["spawn"])
+                play_sound(self.audio_channel, self.sounds['spawn'], state)
 
             self.image = self.build_spawn(self.buzzard[2], 20 - self.spawning)
             if not self.facing_right:
@@ -140,10 +140,10 @@ class Enemy(Character):
         else:
             return self.buzzard[self.frame]
 
-    def killed(self, eggs, egg_images, chars_small, killer, add_sprite, score):
+    def killed(self, eggs, egg_images, hatchling, chars_small, killer, add_sprite, score):
         self.target_x_speed = 4
         egg_x_speed = (self.x_speed + killer.x_speed) * 0.5
         egg_y_speed = (self.y_speed + killer.y_speed - 1) * 0.5
-        add_sprite(eggs, Egg(egg_images, chars_small, self.x + 27, self.y + 21, egg_x_speed, egg_y_speed))
+        add_sprite(eggs, Egg(egg_images, hatchling, chars_small, self.x + 27, self.y + 21, egg_x_speed, egg_y_speed))
         score.kill(self)
         self.alive = False

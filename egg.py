@@ -4,9 +4,10 @@ import actors
 
 
 class Egg(actors.Character):
-    def __init__(self, egg_images, chars_small, x, y, x_speed, y_speed):
+    def __init__(self, egg_images, hatchling, chars_small, x, y, x_speed, y_speed):
         super().__init__()
         self.egg_images = egg_images
+        self.hatchling = hatchling
         self.chars_small = chars_small
         self.image = self.egg_images[0]
         self.mask = pg.mask.from_surface(self.image)
@@ -15,9 +16,12 @@ class Egg(actors.Character):
         self.y = y
         self.x_speed = x_speed
         self.y_speed = y_speed
+        self.last_y = y
         self.rect.topleft = (x, y)
         self.walking = False
         self.bonus = True   # until it hits a platform
+        self.hatch = None
+        self.egg_state = {}
 
     def update(self, current_time, delta, platforms, eggs):
         self.velocity(delta)
@@ -33,14 +37,19 @@ class Egg(actors.Character):
             if collided_egg is not self:
                 self.bounce(collided_egg)
 
+        self.animate_hatch(current_time)
+
         if -0.1 < self.x_speed < 0.1:
             if 890 <= self.x <= 1020:
                 self.x_speed -= 1
             elif -100 <= self.x <= 0:
                 self.x_speed += 1
+            elif self.y == self.last_y and not self.hatch:
+                self.hatch = current_time + 12000
 
         if self.y > 570:  # hit lava
             self.kill()
+        self.last_y = self.y
         self.rect.topleft = (self.x, self.y)
 
     def bounce(self, collider):
@@ -61,3 +70,32 @@ class Egg(actors.Character):
             # egg is below collider
             self.y = self.y + 10
             self.y_speed = 0
+
+    def animate_hatch(self, current_time):
+        if self.hatch:
+            step = 250
+            if current_time > self.hatch + step * 8 + 1000:
+                self.image = self.hatchling[2]
+            elif current_time > self.hatch + step * 7 + 1000:
+                self.image = self.hatchling[1]
+            elif current_time > self.hatch + step * 6 + 1000:
+                if not self.egg_state.get('hatchling', False):
+                    self.egg_state['hatchling'] = True
+                    self.x -= 6
+                    self.y -= 5
+                self.image = self.hatchling[0]
+            elif current_time > self.hatch + step * 5 + 1000:
+                self.image = self.egg_images[3]
+            elif current_time > self.hatch + step * 4:
+                self.image = self.egg_images[0]
+            elif current_time > self.hatch + step * 3:
+                self.image = self.egg_images[2]
+            elif current_time > self.hatch + step * 2:
+                self.image = self.egg_images[0]
+            elif current_time > self.hatch + step:
+                self.image = self.egg_images[1]
+            else:
+                self.image = self.egg_images[0]
+
+            self.mask = pg.mask.from_surface(self.image)
+            self.rect = self.image.get_rect()

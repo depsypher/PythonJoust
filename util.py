@@ -29,3 +29,9 @@ def wrapped_distance(x1, y1, x2, y2, width):
 
     dy = y2 - y1
     return math.sqrt(dx * dx + dy * dy)
+
+
+def play_sound(channel, sound, state):
+    if state['sound']:
+        sound.set_volume(0.5)
+        channel.play(sound)
