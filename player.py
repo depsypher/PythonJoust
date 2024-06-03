@@ -46,7 +46,7 @@ class Player(Character):
         self.score_badges = []
         self.state = state
 
-    def update(self, current_time, delta, keys, platforms, enemies, eggs, score, state):
+    def update(self, current_time, delta, keys, platforms, enemies, eggs, score, state, sprites):
         if self.poof is not None and self.poof.alive():
             self.poof.update(current_time)
 
@@ -73,18 +73,18 @@ class Player(Character):
                 if keys[pg.K_LEFT] or keys[pg.K_RIGHT] or keys[pg.K_SPACE]:
                     self.audio_channel.stop()
                     self.alive = "mounted"
-                    self.do_mounted(current_time, delta, eggs, enemies, keys, platforms, score, state)
+                    self.do_mounted(current_time, delta, eggs, enemies, keys, platforms, score, state, sprites)
             else:
                 self.alive = "mounted"
-                self.do_mounted(current_time, delta, eggs, enemies, keys, platforms, score, state)
+                self.do_mounted(current_time, delta, eggs, enemies, keys, platforms, score, state, sprites)
         elif self.alive == "mounted":
-            self.do_mounted(current_time, delta, eggs, enemies, keys, platforms, score, state)
+            self.do_mounted(current_time, delta, eggs, enemies, keys, platforms, score, state, sprites)
         elif self.alive == "unmounted":
             self.do_unmounted(current_time, delta, platforms, state)
         elif self.lives > 0:
             self.respawn(enemies)
 
-    def do_mounted(self, current_time, delta, eggs, enemies, keys, platforms, score, state):
+    def do_mounted(self, current_time, delta, eggs, enemies, keys, platforms, score, state, sprites):
         if self.skidding is not None:
             skidding = self.skidding - current_time
             if skidding <= 0:
@@ -138,7 +138,6 @@ class Player(Character):
         else:
             if self.flap == 1:
                 self.audio_channel.stop()
-#                self.sounds["flap_up"].play(0)
                 play_sound(self.audio_channel, self.sounds["flap_up"], state)
             self.flap = 0
 
@@ -149,7 +148,7 @@ class Player(Character):
         self.wrap()
 
         self.rect.topleft = (self.x, self.y)
-        self.enemy_collision(eggs, enemies, score, state)
+        self.enemy_collision(eggs, enemies, score, state, sprites)
         self.platform_collision(platforms, state, score)
         self.egg_collision(eggs, score, state)
         self.rect.topleft = (self.x, self.y)
@@ -253,11 +252,11 @@ class Player(Character):
 
         return collided
 
-    def enemy_collision(self, eggs, enemies, score, state):
+    def enemy_collision(self, eggs, enemies, score, state, sprites):
         for enemy in pg.sprite.spritecollide(self, enemies, False, pg.sprite.collide_mask):
             if enemy.alive:
                 if self.y < enemy.y:
-                    enemy.killed(eggs, self.egg_images, self.hatchling, self.chars_small, self, self.add_sprite, score)
+                    enemy.killed(eggs, sprites, self, self.add_sprite, score)
                     self.bounce(enemy, state)
                     enemy.bounce(self)
                 elif self.y - 5 > enemy.y:
@@ -269,7 +268,7 @@ class Player(Character):
                     break
                 else:
                     self.bounce(enemy, state)
-                    enemy.bounce(self )
+                    enemy.bounce(self)
 
     def platform_collision(self, platforms, state, score=None):
         collided = False

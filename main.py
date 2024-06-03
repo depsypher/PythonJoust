@@ -100,10 +100,10 @@ async def main():
         generate_enemies(current_time, enemies_spawning)
 
         if not state['paused']:
-            player.update(current_time, delta, keys, platforms, enemies, eggs, score, state)
+            player.update(current_time, delta, keys, platforms, enemies, eggs, score, state, Sprites)
             platforms.update(current_time)
             enemies.update(current_time, delta, platforms, enemies, state)
-            eggs.update(current_time, delta, platforms, eggs)
+            eggs.update(current_time, delta, platforms, eggs, enemies, Sprites)
             for message in messages:
                 message.update(current_time, lambda m: messages.remove(m))
 
