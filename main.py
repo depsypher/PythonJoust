@@ -9,7 +9,8 @@ from util import SPAWN_POINTS, wrapped_distance, LANES
 from enemy import Enemy
 from message import Message
 from player import Player
-from actors import GodMode, Score
+from actors import GodMode
+from score import Score
 from cliff import Cliff
 
 pg.init()
@@ -96,13 +97,13 @@ async def main():
                 task_data['started'] = True
 
         all_sprites.clear(screen, clear_surface)
-
         generate_enemies(current_time, enemies_spawning)
 
         if not state['paused']:
-            player.update(current_time, delta, keys, platforms, enemies, eggs, score, state, Sprites)
+            player.update(current_time, delta, keys, platforms, enemies, pteros, eggs, score, state, Sprites)
             platforms.update(current_time)
             enemies.update(current_time, delta, platforms, enemies, state)
+            pteros.update(current_time, delta, platforms, eggs, enemies, player1, Sprites)
             eggs.update(current_time, delta, platforms, eggs, enemies, Sprites)
             for message in messages:
                 message.update(current_time, lambda m: messages.remove(m))
@@ -128,6 +129,7 @@ enemies_spawning = []
 
 player = pg.sprite.RenderUpdates()
 enemies = pg.sprite.RenderUpdates()
+pteros = pg.sprite.RenderUpdates()
 eggs = pg.sprite.RenderUpdates()
 platforms = pg.sprite.RenderUpdates()
 god_sprite = pg.sprite.RenderUpdates()
@@ -227,6 +229,7 @@ class Sprites:
     hunter = loader.load_sprite(73, 69, 12, 7, 3, 0, 1, sheet)
     egg = loader.load_sprite(140, 69, 9, 7, 3, 3, 4, sheet)
     hatchling = loader.load_sprite(0, 53, 18, 12, 3, 5, 5, sheet)
+    ptero = loader.load_sprite(357, 48, 28, 11, 3, 6, 3, sheet)
     poof = loader.load_sprite(414, 69, 11, 11, 3, 3, 3, sheet)
     flames = loader.load_sprite(1, 69, 8, 18, 3, 3, 4, sheet)
     chars = loader.load_sprite(1, 93, 11, 7, 3, 0, 50, sheet)

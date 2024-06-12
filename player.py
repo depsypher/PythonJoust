@@ -3,9 +3,10 @@ import sys
 import pygame as pg
 
 from util import SPAWN_POINTS, wrapped_distance, play_sound
-from enemy import Enemy
+from enemy import Enemy, Pterodactyl
 from actors import Character, WALK_ANIM_SPEED
 
+PTERO_WAIT = 30_000
 SKID_MS = 500
 
 
@@ -44,9 +45,10 @@ class Player(Character):
         self.alternate_walk = False
         self.poof = None
         self.score_badges = []
+        self.pterodactyls = 0
         self.state = state
 
-    def update(self, current_time, delta, keys, platforms, enemies, eggs, score, state, sprites):
+    def update(self, current_time, delta, keys, platforms, enemies, pteros, eggs, score, state, sprites):
         if self.poof is not None and self.poof.alive():
             self.poof.update(current_time)
 
@@ -73,73 +75,20 @@ class Player(Character):
                 if keys[pg.K_LEFT] or keys[pg.K_RIGHT] or keys[pg.K_SPACE]:
                     self.audio_channel.stop()
                     self.alive = "mounted"
-                    self.do_mounted(current_time, delta, eggs, enemies, keys, platforms, score, state, sprites)
+                    self.do_mounted(current_time, delta, eggs, enemies, pteros, keys, platforms, score, state, sprites)
             else:
                 self.alive = "mounted"
-                self.do_mounted(current_time, delta, eggs, enemies, keys, platforms, score, state, sprites)
+                self.do_mounted(current_time, delta, eggs, enemies, pteros, keys, platforms, score, state, sprites)
         elif self.alive == "mounted":
-            self.do_mounted(current_time, delta, eggs, enemies, keys, platforms, score, state, sprites)
+            self.do_mounted(current_time, delta, eggs, enemies, pteros, keys, platforms, score, state, sprites)
         elif self.alive == "unmounted":
             self.do_unmounted(current_time, delta, platforms, state)
         elif self.lives > 0:
             self.respawn(enemies)
 
-    def do_mounted(self, current_time, delta, eggs, enemies, keys, platforms, score, state, sprites):
-        if self.skidding is not None:
-            skidding = self.skidding - current_time
-            if skidding <= 0:
-                self.x_speed = 0
-                self.next_accel_time = current_time + 400
-                self.skidding = None
-            elif self.x_speed != 0:
-                if skidding < SKID_MS / 2:
-                    self.x_speed = 2 if self.x_speed > 0 else -2
-                elif skidding < SKID_MS / 4:
-                    self.x_speed = 3 if self.x_speed > 0 else -3
-                else:
-                    self.x_speed = 4 if self.x_speed > 0 else -4
-        elif self.walking and ((self.x_speed > 3 and keys[pg.K_LEFT]) or (self.x_speed < -3 and keys[pg.K_RIGHT])):
-            play_sound(self.audio_channel, self.sounds['skid'], state)
-            self.frame = 4
-            self.skidding = current_time + SKID_MS
-        elif keys[pg.K_LEFT]:
-            if self.walking:
-                if current_time > self.next_accel_time:
-                    self.next_accel_time = current_time + 120
-                    self.x_speed -= 1
-            else:
-                self.facing_right = False
-        elif keys[pg.K_RIGHT]:
-            if self.walking:
-                if current_time > self.next_accel_time:
-                    self.next_accel_time = current_time + 120
-                    self.x_speed += 1
-            else:
-                self.facing_right = True
-
-        if keys[pg.K_SPACE]:
-            self.skidding = None
-            self.walking = False
-
-            if self.flap == 0:
-                if keys[pg.K_LEFT] and current_time > self.next_accel_time:
-                    self.next_accel_time = current_time + 120
-                    self.x_speed -= 1
-                if keys[pg.K_RIGHT] and current_time > self.next_accel_time:
-                    self.next_accel_time = current_time + 120
-                    self.x_speed += 1
-
-                self.y_speed -= 180
-                self.audio_channel.stop()
-                play_sound(self.audio_channel, self.sounds["flap_dn"], state)
-                self.flap = 2
-            else:
-                self.flap = 1
-        else:
-            if self.flap == 1:
-                self.audio_channel.stop()
-                play_sound(self.audio_channel, self.sounds["flap_up"], state)
-            self.flap = 0
+    def do_mounted(self, current_time, delta, eggs, enemies, pteros, keys, platforms, score, state, sprites):
+        self.do_skid(current_time, keys, state)
+        self.do_flap(current_time, keys, state)
 
         if self.walking and self.x_speed != 0:
             self.facing_right = self.x_speed > 0
@@ -148,13 +97,17 @@ class Player(Character):
         self.wrap()
 
         self.rect.topleft = (self.x, self.y)
-        self.enemy_collision(eggs, enemies, score, state, sprites)
+        self.enemy_collision(eggs, enemies, pteros, score, state, sprites)
         self.platform_collision(platforms, state, score)
         self.egg_collision(eggs, score, state)
         self.rect.topleft = (self.x, self.y)
 
         self.walk_animation(current_time, state)
         self.image = self.build_mount(self.mount)
+
+        if current_time > score.last_scored + PTERO_WAIT and self.pterodactyls == 0:
+            self.add_sprite(pteros, Pterodactyl(sprites, 450, 0))
+            self.pterodactyls = 1
 
         if not self.facing_right:
             self.image = pg.transform.flip(self.image, True, False)
@@ -252,7 +205,65 @@ class Player(Character):
 
         return collided
 
-    def enemy_collision(self, eggs, enemies, score, state, sprites):
+    def do_skid(self, current_time, keys, state):
+        if self.skidding is not None:
+            skidding = self.skidding - current_time
+            if skidding <= 0:
+                self.x_speed = 0
+                self.next_accel_time = current_time + 400
+                self.skidding = None
+            elif self.x_speed != 0:
+                if skidding < SKID_MS / 2:
+                    self.x_speed = 2 if self.x_speed > 0 else -2
+                elif skidding < SKID_MS / 4:
+                    self.x_speed = 3 if self.x_speed > 0 else -3
+                else:
+                    self.x_speed = 4 if self.x_speed > 0 else -4
+        elif self.walking and ((self.x_speed > 3 and keys[pg.K_LEFT]) or (self.x_speed < -3 and keys[pg.K_RIGHT])):
+            play_sound(self.audio_channel, self.sounds['skid'], state)
+            self.frame = 4
+            self.skidding = current_time + SKID_MS
+        elif keys[pg.K_LEFT]:
+            if self.walking:
+                if current_time > self.next_accel_time:
+                    self.next_accel_time = current_time + 120
+                    self.x_speed -= 1
+            else:
+                self.facing_right = False
+        elif keys[pg.K_RIGHT]:
+            if self.walking:
+                if current_time > self.next_accel_time:
+                    self.next_accel_time = current_time + 120
+                    self.x_speed += 1
+            else:
+                self.facing_right = True
+
+    def do_flap(self, current_time, keys, state):
+        if keys[pg.K_SPACE]:
+            self.skidding = None
+            self.walking = False
+
+            if self.flap == 0:
+                if keys[pg.K_LEFT] and current_time > self.next_accel_time:
+                    self.next_accel_time = current_time + 120
+                    self.x_speed -= 1
+                if keys[pg.K_RIGHT] and current_time > self.next_accel_time:
+                    self.next_accel_time = current_time + 120
+                    self.x_speed += 1
+
+                self.y_speed -= 180
+                self.audio_channel.stop()
+                play_sound(self.audio_channel, self.sounds["flap_dn"], state)
+                self.flap = 2
+            else:
+                self.flap = 1
+        else:
+            if self.flap == 1:
+                self.audio_channel.stop()
+                play_sound(self.audio_channel, self.sounds["flap_up"], state)
+            self.flap = 0
+
+    def enemy_collision(self, eggs, enemies, pteros, score, state, sprites):
         for enemy in pg.sprite.spritecollide(self, enemies, False, pg.sprite.collide_mask):
             if enemy.alive:
                 if self.y < enemy.y:
@@ -269,6 +280,12 @@ class Player(Character):
                 else:
                     self.bounce(enemy, state)
                     enemy.bounce(self)
+
+        if not state['god'].on:
+            for _ in pg.sprite.spritecollide(self, pteros, False, pg.sprite.collide_mask):
+                score.reset()
+                self.die(score)
+                break
 
     def platform_collision(self, platforms, state, score=None):
         collided = False

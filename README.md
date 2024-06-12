@@ -2,7 +2,9 @@ PythonJoust
 ===========
 
 ## Fork Info:
-I found @StevePaget made a very nice starting point for a joust game! I'm working on fleshing it out so it plays like the arcade. Check out roadmap below to see how it's progressing.
+I found @StevePaget made a very nice starting point for a joust game! I'm working on fleshing it out so it plays like the arcade.
+
+Check out roadmap below to see how it's progressing.
 
 I made it playable online using pygbag for wasm conversion:
 
@@ -11,30 +13,34 @@ https://depsypher.github.io/PythonJoust/
 Controls are left, right and space to flap.
 
 ### Roadmap:
-- [ ] Wave 1 (buzzard bait)
-- [x] More or less authentic movement physics
-- [x] First stage needs bottom platform
-- [x] Lava animates
-- [x] Show scoring when collecting eggs
-- [ ] Make eggs hatch
-- [ ] Smarter enemies
-- [ ] Pterodactyl comes out if you take too long
-- [ ] Wave 2 (survival wave)
-- [ ] Even smarter and faster enemies
-- [ ] Award bonus points upon survival
-- [ ] Wave 3 (burn platform)
-- [x] Bottom platform burns exposing lava
-- [ ] Add lava troll
-- [ ] Wave 5 (egg wave)
-- [ ] Wave 6 (dissolve top middle cliff)
-- [ ] Wave 7 (survival, dissolve top left & right cliff)
-- [ ] Wave 8 (unbeatable pterodactyl?)
-- [ ] Wave 9 (dissolve middle cliff)
-- [ ] Wave 10 (egg wave, restore cliffs)
-- [ ] Attract mode
-- [ ] Title screen and intro sequence
-- [ ] High scores
-- [ ] Add player 2?
+|    | Roadmap                                            |
+|----|----------------------------------------------------|
+| ⬜️ | Wave 1 (buzzard bait)                              |
+| ✅  | More or less authentic movement physics            |
+| ✅  | First stage needs bottom platform                  |
+| ✅  | Lava animates                                      |
+| ✅  | Show scoring when collecting eggs                  |
+| ✅  | Make eggs hatch                                    |
+| ⬜️ | Smarter enemies                                    |
+| ✅  | Pterodactyl comes out if you take too long         | 
+| ⬜️ | Wave 2 (survival wave)                             |
+| ⬜️ | Even smarter and faster enemies                    |
+| ⬜️ | Award bonus points upon survival                   |
+| ⬜️ | Wave 3 (burn platform)                             |
+| ✅  | Bottom platform burns exposing lava                |
+| ⬜️ | Add lava troll                                     |
+| ⬜️ | Wave 5 (egg wave)                                  |
+| ⬜️ | Wave 6 (dissolve top middle cliff)                 |
+| ⬜️ | Wave 7 (survival, dissolve top left & right cliff) |
+| ⬜️ | Wave 8 (unbeatable pterodactyl?)                   |
+| ⬜️ | Wave 9 (dissolve middle cliff)                     |
+| ⬜️ | Wave 10 (egg wave, restore cliffs)                 |
+| ⬜️ | Attract mode                                       |
+| ⬜️ | Title screen and intro sequence                    |
+| ⬜️ | High scores                                        |
+| ⬜️ | Stretch goals                                      |
+| ⬜️ | Add player 2?                                      |
+| ⬜️ | Buzzards fly in to pick up hatched riders          |
 
 ### Reference material:
 * Arcade specs: https://seanriddle.com/willhard.html

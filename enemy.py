@@ -149,6 +149,59 @@ class Enemy(Character):
         self.alive = False
 
 
+class Pterodactyl(Character):
+    def __init__(self, sprites, x, y):
+        super().__init__()
+        self.images = sprites.ptero
+        self.image = sprites.ptero[1]
+        self.mask = pg.mask.from_surface(self.image)
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+        self.x = x
+        self.y = y
+        self.x_speed = 2
+        self.next_flap = 0
+        self.walking = False
+
+    def update(self, current_time, delta, platforms, eggs, enemies, player1, sprites):
+        self.y_speed = 60 if player1.y > self.y else -90
+        self.velocity(delta)
+        self.wrap()
+        self.rect.topleft = (self.x, self.y)
+
+        collided_platforms = pg.sprite.spritecollide(self, platforms, False, pg.sprite.collide_mask)
+        for collidedPlatform in collided_platforms:
+            self.bounce(collidedPlatform)
+
+        self.rect.topleft = (self.x, self.y)
+
+        if current_time > self.next_flap:
+            self.flap = 1 if self.flap == 2 else 2
+            self.next_flap = current_time + 500
+
+        if self.x_speed < 0:
+            self.image = pg.transform.flip(self.images[self.flap], True, False)
+        else:
+            self.image = self.images[self.flap]
+
+    def bounce(self, collider):
+        if self.y < collider.y and ((collider.x - 40) < self.x < (collider.rect.right - 10)):
+            # ptero is above collider
+            self.y = collider.y - self.rect.height - 10
+        elif self.x < collider.x:
+            # ptero is left of collider
+            self.x -= 4
+            self.x_speed = -self.x_speed
+        elif self.x > collider.rect.right + self.x_speed:
+            # ptero is right of collider
+            self.x += 4
+            self.x_speed = -self.x_speed
+        elif self.y > collider.y:
+            # ptero is below collider
+            self.y = self.y + 10
+            self.y_speed = 0
+
+
 class Egg(Character):
     def __init__(self, sprites, x, y, x_speed, y_speed, add_sprite):
         super().__init__()
