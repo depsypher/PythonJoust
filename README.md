@@ -12,7 +12,9 @@ https://depsypher.github.io/PythonJoust/
 
 Controls are left, right and space to flap.
 
-### Roadmap:
+Also, `s` toggles sound, `p` pauses.<br>
+For debugging: `g` toggles god mode, `k` kills the player.<br>
+
 |    | Roadmap                                            |
 |----|----------------------------------------------------|
 | ⬜️ | Wave 1 (buzzard bait)                              |
@@ -43,12 +45,12 @@ Controls are left, right and space to flap.
 | ⬜️ | Buzzards fly in to pick up hatched riders          |
 
 ### Reference material:
+* Old game review: https://www.atarimagazines.com/cva/v1n2/joust.php
 * Arcade specs: https://seanriddle.com/willhard.html
-
+* Screen size pics: https://seanriddle.com/willy2.html
 * Annotated assembly from the arcade:
 https://github.com/historicalsource/joust
 https://github.com/synamaxmusic/joust/blob/main/JOUSTRV4.ASM
-
 
 * Original graphics:
 https://seanriddle.com/ripper.html

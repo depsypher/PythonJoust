@@ -165,9 +165,7 @@ class Player(Character):
                 collided = True
                 grace = 5
                 if collider.rect.left + grace < self.rect.centerx < collider.rect.right - grace:
-                    if not self.walking:
-                        self.walking = True
-
+                    self.walking = True
                     self.y = collider.y - self.rect.height + 1
                     self.flap = 0
                     self.y_speed = 0
@@ -221,7 +219,6 @@ class Player(Character):
                     self.x_speed = 4 if self.x_speed > 0 else -4
         elif self.walking and ((self.x_speed > 3 and keys[pg.K_LEFT]) or (self.x_speed < -3 and keys[pg.K_RIGHT])):
             play_sound(self.audio_channel, self.sounds['skid'], state)
-            self.frame = 4
             self.skidding = current_time + SKID_MS
         elif keys[pg.K_LEFT]:
             if self.walking:
